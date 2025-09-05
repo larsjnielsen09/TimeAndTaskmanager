@@ -1,0 +1,35 @@
+# Time and Task Manager - Git Ignore
+
+# Data files (user's personal time tracking data)
+data/*.json
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Keep the data directory but ignore JSON files
+!data/.gitkeep

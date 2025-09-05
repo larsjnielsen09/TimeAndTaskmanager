@@ -1,0 +1,15 @@
+# Time and Task Manager - Requirements
+# This project uses only Python standard library modules
+# No external dependencies required
+
+# Python version requirement
+# Python >= 3.7
+
+# Standard library modules used:
+# - json (for data persistence)
+# - os (for file operations)
+# - sys (for system operations)
+# - datetime (for time handling)
+# - typing (for type hints)
+# - dataclasses (for data models)
+# - uuid (for unique IDs)
