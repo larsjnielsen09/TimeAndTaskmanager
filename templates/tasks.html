@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks - Time & Task Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-tasks"></i> Tasks</h1>
+</div>
+
+{% if tasks %}
+    <div class="tasks-grid">
+        {% for task in tasks %}
+            <div class="task-card-large">
+                <div class="task-header">
+                    <div class="task-status">
+                        {% if task.status == 'completed' %}
+                            <span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>
+                        {% elif task.status == 'paused' %}
+                            <span class="status-badge status-paused"><i class="fas fa-pause-circle"></i> Paused</span>
+                        {% else %}
+                            <span class="status-badge status-active"><i class="fas fa-play-circle"></i> Active</span>
+                        {% endif %}
+                    </div>
+                    <div class="task-actions">
+                        <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-outline">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this task?')">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="task-content">
+                    <h3>{{ task.title }}</h3>
+                    <p class="task-meta">
+                        <strong>{{ task.customer }}</strong> / {{ task.project }}
+                    </p>
+                    
+                    {% if task.description %}
+                        <p class="task-description">{{ task.description }}</p>
+                    {% endif %}
+                    
+                    <div class="task-stats">
+                        <div class="stat">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-calendar"></i>
+                            <span>Created {{ task.created_at[:10] }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if task.status == 'active' %}
+                    <div class="task-footer">
+                        <form method="POST" action="{{ url_for('add_time_entry') }}" class="time-entry-form">
+                            <input type="hidden" name="task_id" value="{{ task.id }}">
+                            <div class="time-entry-row">
+                                <div class="form-group-inline">
+                                    <label for="hours-{{ task.id }}">Hours:</label>
+                                    <input type="number" id="hours-{{ task.id }}" name="hours" 
+                                           min="0.1" step="0.1" placeholder="2.5" required
+                                           class="form-control-sm">
+                                </div>
+                                <div class="form-group-inline">
+                                    <label for="date-{{ task.id }}">Date:</label>
+                                    <input type="date" id="date-{{ task.id }}" name="date" 
+                                           class="form-control-sm">
+                                </div>
+                                <div class="form-group-inline">
+                                    <input type="text" name="description" 
+                                           placeholder="Work description (optional)" 
+                                           class="form-control-sm">
+                                </div>
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus"></i> Add Time
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="no-data-large">
+        <i class="fas fa-tasks fa-3x"></i>
+        <h3>No tasks yet</h3>
+        <p>Create your first task to start tracking time.</p>
+        <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Task
+        </a>
+    </div>
+{% endif %}
+<script>
+// Set today's date as default for all date inputs
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    
+    dateInputs.forEach(function(input) {
+        if (!input.value) {
+            input.value = today;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Report - Time & Task Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-building"></i> Time Report by Customer</h1>
+    <a href="{{ url_for('reports') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Reports
+    </a>
+</div>
+
+{% if tasks_by_customer %}
+    <div class="report-summary">
+        <h3>Total Time: {{ "%.2f"|format(total_all_time) }} hours</h3>
+    </div>
+    
+    <div class="report-table">
+{% for customer_id, tasks in tasks_by_customer.items() %}
+    <h3>{{ task_manager.get_customer(customer_id).name }}</h3>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Department</th>
+                <th>Hours</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.date }}</td>
+                <td>{{ task_manager.get_department(task.department_id).name }}</td>
+                <td>{{ "%.2f"|format(task.hours) }}</td>
+                <td>{{ task.description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endfor %}
+    </div>
+{% else %}
+    <div class="no-data-large">
+        <i class="fas fa-chart-bar fa-3x"></i>
+        <h3>No time entries found</h3>
+        <p>Start tracking time to see reports.</p>
+        <a href="{{ url_for('list_tasks') }}" class="btn btn-primary">
+            <i class="fas fa-tasks"></i> Go to Tasks
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}All Entries Report - Time & Task Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-list"></i> All Time Entries Report</h1>
+    <a href="{{ url_for('reports') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Reports
+    </a>
+</div>
+
+{% if tasks %}
+    <div class="report-summary">
+        <h3>Total Time: {{ "%.2f"|format(total_time) }} hours</h3>
+    </div>
+    
+    <div class="report-table">
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Department</th>
+            <th>Hours</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for task in tasks %}
+        <tr>
+            <td>{{ task.date }}</td>
+            <td>{{ task_manager.get_customer(task.customer_id).name }}</td>
+            <td>{{ task_manager.get_department(task.department_id).name }}</td>
+            <td>{{ "%.2f"|format(task.hours) }}</td>
+            <td>{{ task.description }}</td>
+            <td class="task-actions">
+                <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-outline" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this task?')">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    </div>
+{% else %}
+    <div class="no-data-large">
+        <i class="fas fa-chart-bar fa-3x"></i>
+        <h3>No time entries found</h3>
+        <p>Start tracking time to see reports.</p>
+        <a href="{{ url_for('list_tasks') }}" class="btn btn-primary">
+            <i class="fas fa-tasks"></i> Go to Tasks
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+  <h1>Customers</h1>
+  <form method="POST" action="{{ url_for('customers') }}">
+    <input type="text" name="name" placeholder="Customer name">
+    <button type="submit">Add Customer</button>
+  </form>
+  <ul>
+    {% for customer in customers %}
+      <li>{{ customer.name }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+

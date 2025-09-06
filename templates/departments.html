@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Departments{% endblock %}
+
+{% block content %}
+  <h1>Departments</h1>
+  <form method="POST" action="{{ url_for('departments') }}">
+    <select name="customer_id">
+      {% for customer in customers %}
+        <option value="{{ customer.id }}">{{ customer.name }}</option>
+      {% endfor %}
+    </select>
+    <input type="text" name="name" placeholder="Department name">
+    <button type="submit">Add Department</button>
+  </form>
+  <ul>
+    {% for department in departments %}
+      <li>{{ department.name }} ({{ task_manager.get_customer(department.customer_id).name }})</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+
