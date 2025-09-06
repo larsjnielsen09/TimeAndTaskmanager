@@ -27,7 +27,7 @@
     </div>
     <div class="card-body">
         <form method="get" class="row g-3">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label for="customer" class="form-label">Customer</label>
                 <select name="customer" id="customer" class="form-select">
                     <option value="">All Customers</option>
@@ -39,29 +39,19 @@
                 </select>
             </div>
             
-            <div class="col-md-3">
-                <label for="project" class="form-label">Project</label>
-                <select name="project" id="project" class="form-select">
-                    <option value="">All Projects</option>
-                    {% for project in projects %}
-                    <option value="{{ project }}" {% if project == current_project %}selected{% endif %}>
-                        {{ project }}
+            <div class="col-md-4">
+                <label for="department" class="form-label">Department</label>
+                <select name="department" id="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for department in departments %}
+                    <option value="{{ department }}" {% if department == current_department %}selected{% endif %}>
+                        {{ department }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
             
-            <div class="col-md-3">
-                <label for="status" class="form-label">Status</label>
-                <select name="status" id="status" class="form-select">
-                    <option value="">All Statuses</option>
-                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
-                    <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
-                    <option value="paused" {% if current_status == 'paused' %}selected{% endif %}>Paused</option>
-                </select>
-            </div>
-            
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label">&nbsp;</label>
                 <div>
                     <button type="submit" class="btn btn-primary">
@@ -80,7 +70,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
-            {% if current_customer or current_project or current_status %}
+            {% if current_customer or current_department %}
                 Filtered Tasks ({{ tasks|length }} results)
             {% else %}
                 All Tasks ({{ tasks|length }})
@@ -101,80 +91,55 @@
         <div id="tasks-list-view">
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Task</th>
-                            <th>Customer/Project</th>
-                            <th>Status</th>
-                            <th>Time Spent</th>
-                            <th>Estimated</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for task in tasks %}
-                        {% set total_time = time_tracker.get_total_time_for_task(task.id) %}
-                        <tr>
-                            <td>
-                                <div class="fw-bold">
-                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
-                                        {{ task.title }}
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Department</th>
+                                <th>Date</th>
+                                <th>Hours</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none fw-bold">
+                                        {{ task.customer }}
                                     </a>
-                                </div>
-                                {% if task.description %}
-                                <small class="text-muted">{{ task.description[:80] }}{% if task.description|length > 80 %}...{% endif %}</small>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div>{{ task.customer }}</div>
-                                <small class="text-muted">{{ task.project }}</small>
-                            </td>
-                            <td>
-                                <span class="badge {{ task.status|status_badge }}">{{ task.status }}</span>
-                            </td>
-                            <td>
-                                <strong>{{ "%.2f"|format(total_time) }}h</strong>
-                                {% if task.estimated_hours > 0 and total_time > 0 %}
-                                    {% set percentage = (total_time / task.estimated_hours * 100) %}
-                                    <div class="progress mt-1" style="height: 4px;">
-                                        <div class="progress-bar 
-                                            {% if percentage > 100 %}bg-danger
-                                            {% elif percentage > 80 %}bg-warning
-                                            {% else %}bg-success{% endif %}" 
-                                            style="width: {{ [percentage, 100]|min }}%"></div>
+                                </td>
+                                <td>{{ task.department }}</td>
+                                <td>{{ task.date }}</td>
+                                <td>
+                                    <strong>{{ task.hours }}h</strong>
+                                </td>
+                                <td>
+                                    {% if task.description %}
+                                    {{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}
+                                    {% else %}
+                                    <em class="text-muted">No description</em>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('view_task', task_id=task.id) }}" 
+                                           class="btn btn-outline-primary" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('edit_task', task_id=task.id) }}" 
+                                           class="btn btn-outline-warning" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                title="Delete" onclick="deleteTask('{{ task.id }}', '{{ task.customer }}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if task.estimated_hours > 0 %}
-                                    {{ "%.1f"|format(task.estimated_hours) }}h
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <small>{{ (task.created_at)|datetime }}</small>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ url_for('view_task', task_id=task.id) }}" 
-                                       class="btn btn-outline-primary" title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ url_for('edit_task', task_id=task.id) }}" 
-                                       class="btn btn-outline-warning" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-outline-danger" 
-                                            title="Delete" onclick="deleteTask('{{ task.id }}', '{{ task.title }}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -182,11 +147,10 @@
         <div id="tasks-grid-view" style="display: none;">
             <div class="row">
                 {% for task in tasks %}
-                {% set total_time = time_tracker.get_total_time_for_task(task.id) %}
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span class="badge {{ task.status|status_badge }}">{{ task.status }}</span>
+                            <span class="badge bg-primary">{{ task.department }}</span>
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ url_for('view_task', task_id=task.id) }}" 
                                    class="btn btn-outline-primary btn-sm">
@@ -201,39 +165,17 @@
                         <div class="card-body">
                             <h6 class="card-title">
                                 <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
-                                    {{ task.title }}
+                                    {{ task.customer }}
                                 </a>
                             </h6>
                             <p class="card-text">
-                                <small class="text-muted">{{ task.customer }} - {{ task.project }}</small>
+                                <small class="text-muted">{{ task.date }} - {{ task.hours }}h</small>
                             </p>
                             {% if task.description %}
                             <p class="card-text">
                                 <small>{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</small>
                             </p>
                             {% endif %}
-                            
-                            <div class="mt-auto">
-                                <div class="row text-center">
-                                    <div class="col-6">
-                                        <div class="h6 text-primary">{{ "%.1f"|format(total_time) }}h</div>
-                                        <small class="text-muted">Spent</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="h6 text-info">
-                                            {% if task.estimated_hours > 0 %}
-                                                {{ "%.1f"|format(task.estimated_hours) }}h
-                                            {% else %}
-                                                -
-                                            {% endif %}
-                                        </div>
-                                        <small class="text-muted">Estimated</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer">
-                            <small class="text-muted">Created {{ (task.created_at)|datetime }}</small>
                         </div>
                     </div>
                 </div>
@@ -246,7 +188,7 @@
             <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
             <h4 class="text-muted mt-3">No tasks found</h4>
             <p class="text-muted">
-                {% if current_customer or current_project or current_status %}
+                {% if current_customer or current_department %}
                     No tasks match your current filters.
                     <a href="{{ url_for('list_tasks') }}">Clear filters</a> to see all tasks.
                 {% else %}

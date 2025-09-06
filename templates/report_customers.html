@@ -28,11 +28,11 @@
                         <div>Active Customers</div>
                     </div>
                     <div class="col-md-3">
-                        <div class="h3">{{ "%.1f"|format(total_time) }}h</div>
-                        <div>Total Time</div>
+                        <div class="h3">{{ "%.1f"|format(total_hours) }}h</div>
+                        <div>Total Hours</div>
                     </div>
                     <div class="col-md-3">
-                        <div class="h3">{{ "%.1f"|format(total_time / customer_data|length if customer_data else 0) }}h</div>
+                        <div class="h3">{{ "%.1f"|format(total_hours / customer_data|length if customer_data else 0) }}h</div>
                         <div>Average per Customer</div>
                     </div>
                     <div class="col-md-3">
@@ -47,26 +47,26 @@
 
 <!-- Customer Table -->
 <div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="bi bi-bar-chart"></i>
-            Time by Customer
-        </h5>
-    </div>
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart"></i>
+                    Hours by Customer
+                </h5>
+            </div>
     <div class="card-body">
         {% if customer_data %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Customer</th>
-                        <th>Total Time</th>
-                        <th>Tasks</th>
-                        <th>Average per Task</th>
-                        <th>Percentage</th>
-                        <th>Actions</th>
-                    </tr>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Customer</th>
+                                <th>Total Hours</th>
+                                <th>Tasks</th>
+                                <th>Average per Task</th>
+                                <th>Percentage</th>
+                                <th>Actions</th>
+                            </tr>
                 </thead>
                 <tbody>
                     {% for item in customer_data %}
@@ -83,18 +83,18 @@
                         <td>
                             <div class="fw-bold">{{ item.customer }}</div>
                         </td>
-                        <td>
-                            <strong>{{ "%.2f"|format(item.total_time) }}h</strong>
-                            <div class="progress mt-1" style="height: 4px;">
-                                <div class="progress-bar bg-info" style="width: {{ (item.total_time / customer_data[0].total_time * 100) if customer_data else 0 }}%"></div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge bg-primary">{{ item.task_count }} tasks</span>
-                        </td>
-                        <td>
-                            {{ "%.2f"|format(item.total_time / item.task_count) }}h
-                        </td>
+                                <td>
+                                    <strong>{{ "%.2f"|format(item.total_hours) }}h</strong>
+                                    <div class="progress mt-1" style="height: 4px;">
+                                        <div class="progress-bar bg-info" style="width: {{ (item.total_hours / customer_data[0].total_hours * 100) if customer_data else 0 }}%"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ item.task_count }} tasks</span>
+                                </td>
+                                <td>
+                                    {{ "%.2f"|format(item.total_hours / item.task_count) }}h
+                                </td>
                         <td>
                             <div class="d-flex align-items-center">
                                 <span class="me-2">{{ "%.1f"|format(item.percentage) }}%</span>
@@ -146,7 +146,7 @@
                         <small class="d-block text-muted">{{ item.task_count }} tasks</small>
                     </div>
                     <div class="text-end">
-                        <div class="fw-bold">{{ "%.1f"|format(item.total_time) }}h</div>
+                        <div class="fw-bold">{{ "%.1f"|format(item.total_hours) }}h</div>
                         <small class="text-muted">{{ "%.1f"|format(item.percentage) }}%</small>
                     </div>
                 </div>
@@ -167,7 +167,7 @@
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-12 mb-3">
-                        <div class="h5 text-info">{{ "%.1f"|format(customer_data[0].total_time) }}h</div>
+                        <div class="h5 text-info">{{ "%.1f"|format(customer_data[0].total_hours) }}h</div>
                         <small class="text-muted">Highest: {{ customer_data[0].customer }}</small>
                     </div>
                     <div class="col-6">
@@ -175,7 +175,7 @@
                         <small class="text-muted">Most Tasks</small>
                     </div>
                     <div class="col-6">
-                        <div class="h6">{{ "%.1f"|format(customer_data|map(attribute='total_time')|list|sum / customer_data|map(attribute='task_count')|list|sum) }}h</div>
+                        <div class="h6">{{ "%.1f"|format(customer_data|map(attribute='total_hours')|list|sum / customer_data|map(attribute='task_count')|list|sum) }}h</div>
                         <small class="text-muted">Avg per Task</small>
                     </div>
                 </div>
@@ -215,7 +215,7 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-6">
-                                        <div class="h6">{{ "%.1f"|format(item.total_time) }}h</div>
+                                        <div class="h6">{{ "%.1f"|format(item.total_hours) }}h</div>
                                         <small class="text-muted">Total</small>
                                     </div>
                                     <div class="col-6">

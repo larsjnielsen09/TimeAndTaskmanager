@@ -1,0 +1,22 @@
+{
+  "b2e94479-3b48-447c-8e0a-55da8809b0e3": {
+    "id": "b2e94479-3b48-447c-8e0a-55da8809b0e3",
+    "customer_id": "4619b969-2dd8-4981-aafc-b59bcacff9b7",
+    "department_id": "ad2fbc9d-dbc1-4fbe-a9c9-8e7de101ad69",
+    "date": "2025-09-07T00:00:00",
+    "hours": 10.0,
+    "description": "1 time dzsfgdfgdfgdgf dgfdgfdg",
+    "created_at": "2025-09-06T11:05:49.135289",
+    "updated_at": null
+  },
+  "0c1d230f-1541-44d0-8789-be682e63cfdd": {
+    "id": "0c1d230f-1541-44d0-8789-be682e63cfdd",
+    "customer_id": "fc7d0669-e8d2-4083-ab74-dc6627cf0069",
+    "department_id": "3ebae32c-9076-47d5-9909-7ad56e8f4fe0",
+    "date": "2025-09-06T00:00:00",
+    "hours": 5.0,
+    "description": "5 timer - oihfisfuhksdjuhf",
+    "created_at": "2025-09-06T11:07:59.291755",
+    "updated_at": null
+  }
+}

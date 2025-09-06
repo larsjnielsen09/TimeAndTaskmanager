@@ -13,113 +13,97 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, f
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from task_manager import TaskManager, Task
-from time_tracker import TimeTracker, TimeEntry
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'  # Change this for production
 
 # Initialize managers
 task_manager = TaskManager()
-time_tracker = TimeTracker()
 
 @app.route('/')
 def dashboard():
-    """Main dashboard showing overview of tasks and active timer."""
+    """Main dashboard showing overview of tasks."""
     tasks = task_manager.get_all_tasks()
-    active_entry = time_tracker.get_active_entry()
     
-    # Get statistics
-    active_tasks = [t for t in tasks if t.status == 'active']
-    completed_tasks = [t for t in tasks if t.status == 'completed']
-    total_time_today = 0
+    # Calculate statistics
+    total_hours = sum(task.hours for task in tasks)
+    customers = task_manager.get_customers()
+    departments = task_manager.get_departments()
     
-    # Calculate today's time
-    today = datetime.now().date()
-    all_entries = time_tracker.get_all_time_entries()
-    for entry in all_entries:
-        entry_date = datetime.fromisoformat(entry.start_time).date()
-        if entry_date == today and entry.end_time:
-            total_time_today += entry.get_duration_hours()
-    
-    # Add active timer time if it's from today
-    if active_entry:
-        start_time = datetime.fromisoformat(active_entry.start_time)
-        if start_time.date() == today:
-            current_duration = datetime.now() - start_time
-            total_time_today += current_duration.total_seconds() / 3600.0
+    # Get recent tasks (last 10)
+    recent_tasks = sorted(tasks, key=lambda t: t.date, reverse=True)[:10]
     
     return render_template('dashboard.html', 
                          tasks=tasks,
-                         active_tasks=active_tasks,
-                         completed_tasks=completed_tasks,
-                         active_entry=active_entry,
-                         task_manager=task_manager,
-                         total_time_today=total_time_today)
+                         total_tasks=len(tasks),
+                         total_hours=total_hours,
+                         total_customers=len(customers),
+                         total_departments=len(departments),
+                         recent_tasks=recent_tasks)
 
 @app.route('/tasks')
 def list_tasks():
     """List all tasks with filtering options."""
     customer_filter = request.args.get('customer', '')
-    project_filter = request.args.get('project', '')
-    status_filter = request.args.get('status', '')
+    department_filter = request.args.get('department', '')
     
     tasks = task_manager.get_all_tasks()
     
     # Apply filters
     if customer_filter:
         tasks = [t for t in tasks if t.customer.lower() == customer_filter.lower()]
-    if project_filter:
-        tasks = [t for t in tasks if t.project.lower() == project_filter.lower()]
-    if status_filter:
-        tasks = [t for t in tasks if t.status == status_filter]
+    if department_filter:
+        tasks = [t for t in tasks if t.department.lower() == department_filter.lower()]
     
-    # Sort by creation date (most recent first)
-    tasks.sort(key=lambda t: t.created_at, reverse=True)
+    # Sort by date (most recent first)
+    tasks.sort(key=lambda t: t.date, reverse=True)
     
-    # Get unique customers and projects for filter dropdowns
+    # Get unique customers and departments for filter dropdowns
     all_customers = task_manager.get_customers()
-    all_projects = task_manager.get_projects()
+    all_departments = task_manager.get_departments()
     
     return render_template('tasks.html', 
                          tasks=tasks,
-                         time_tracker=time_tracker,
                          customers=all_customers,
-                         projects=all_projects,
+                         departments=all_departments,
                          current_customer=customer_filter,
-                         current_project=project_filter,
-                         current_status=status_filter)
+                         current_department=department_filter)
 
 @app.route('/tasks/create', methods=['GET', 'POST'])
 def create_task():
     """Create a new task."""
     if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        description = request.form.get('description', '').strip()
         customer = request.form.get('customer', '').strip()
-        project = request.form.get('project', '').strip()
-        estimated_hours = float(request.form.get('estimated_hours', 0) or 0)
-        
-        if not title:
-            flash('Task title is required', 'error')
-            return render_template('create_task.html')
+        department = request.form.get('department', '').strip()
+        date = request.form.get('date', '').strip()
+        hours = float(request.form.get('hours', 0) or 0)
+        description = request.form.get('description', '').strip()
         
         if not customer:
             flash('Customer name is required', 'error')
             return render_template('create_task.html')
         
-        if not project:
-            flash('Project name is required', 'error')
+        if not department:
+            flash('Department is required', 'error')
+            return render_template('create_task.html')
+        
+        if not date:
+            flash('Date is required', 'error')
+            return render_template('create_task.html')
+        
+        if hours <= 0:
+            flash('Hours must be greater than 0', 'error')
             return render_template('create_task.html')
         
         task = task_manager.create_task(
-            title=title,
-            description=description,
             customer=customer,
-            project=project,
-            estimated_hours=estimated_hours
+            department=department,
+            date=date,
+            hours=hours,
+            description=description
         )
         
-        flash(f'Task "{task.title}" created successfully!', 'success')
+        flash(f'Task for {task.customer} created successfully!', 'success')
         return redirect(url_for('list_tasks'))
     
     return render_template('create_task.html')
@@ -132,16 +116,7 @@ def view_task(task_id):
         flash('Task not found', 'error')
         return redirect(url_for('list_tasks'))
     
-    # Get time entries for this task
-    time_entries = time_tracker.get_time_entries_for_task(task_id)
-    time_entries.sort(key=lambda e: e.start_time, reverse=True)
-    
-    total_time = time_tracker.get_total_time_for_task(task_id)
-    
-    return render_template('view_task.html', 
-                         task=task, 
-                         time_entries=time_entries,
-                         total_time=total_time)
+    return render_template('view_task.html', task=task)
 
 @app.route('/tasks/<task_id>/edit', methods=['GET', 'POST'])
 def edit_task(task_id):
@@ -154,32 +129,28 @@ def edit_task(task_id):
     if request.method == 'POST':
         updates = {}
         
-        title = request.form.get('title', '').strip()
-        if title: updates['title'] = title
+        customer = request.form.get('customer', '').strip()
+        if customer: updates['customer'] = customer
+        
+        department = request.form.get('department', '').strip()
+        if department: updates['department'] = department
+        
+        date = request.form.get('date', '').strip()
+        if date: updates['date'] = date
+        
+        hours = request.form.get('hours', '').strip()
+        if hours:
+            try:
+                updates['hours'] = float(hours)
+            except ValueError:
+                pass
         
         description = request.form.get('description', '').strip()
         if description is not None: updates['description'] = description
         
-        customer = request.form.get('customer', '').strip()
-        if customer: updates['customer'] = customer
-        
-        project = request.form.get('project', '').strip()
-        if project: updates['project'] = project
-        
-        status = request.form.get('status', '').strip()
-        if status and status in ['active', 'completed', 'paused']:
-            updates['status'] = status
-        
-        estimated_hours = request.form.get('estimated_hours', '').strip()
-        if estimated_hours:
-            try:
-                updates['estimated_hours'] = float(estimated_hours)
-            except ValueError:
-                pass
-        
         if updates:
             updated_task = task_manager.update_task(task_id, **updates)
-            flash(f'Task "{updated_task.title}" updated successfully!', 'success')
+            flash(f'Task for {updated_task.customer} updated successfully!', 'success')
         else:
             flash('No changes made', 'info')
         
@@ -196,208 +167,77 @@ def delete_task(task_id):
         return redirect(url_for('list_tasks'))
     
     if task_manager.delete_task(task_id):
-        flash(f'Task "{task.title}" deleted successfully!', 'success')
+        flash(f'Task for "{task.customer}" deleted successfully!', 'success')
     else:
         flash('Failed to delete task', 'error')
     
     return redirect(url_for('list_tasks'))
 
-@app.route('/timer')
-def timer_page():
-    """Timer management page."""
-    active_entry = time_tracker.get_active_entry()
-    active_tasks = [t for t in task_manager.get_all_tasks() if t.status == 'active']
-    
-    return render_template('timer.html', 
-                         active_entry=active_entry,
-                         active_tasks=active_tasks,
-                         task_manager=task_manager,
-                         time_tracker=time_tracker)
-
-@app.route('/timer/start', methods=['POST'])
-def start_timer():
-    """Start timer for a task."""
-    task_id = request.form.get('task_id')
-    description = request.form.get('description', '').strip()
-    
-    if not task_id:
-        flash('Please select a task', 'error')
-        return redirect(url_for('timer_page'))
-    
-    task = task_manager.get_task(task_id)
-    if not task:
-        flash('Task not found', 'error')
-        return redirect(url_for('timer_page'))
-    
-    # Check if there's already an active timer
-    active_entry = time_tracker.get_active_entry()
-    if active_entry:
-        # Stop the current timer
-        time_tracker.stop_timer()
-    
-    # Start new timer
-    entry = time_tracker.start_timer(task_id, description)
-    flash(f'Timer started for "{task.title}"', 'success')
-    
-    return redirect(url_for('timer_page'))
-
-@app.route('/timer/stop', methods=['POST'])
-def stop_timer():
-    """Stop the active timer."""
-    active_entry = time_tracker.get_active_entry()
-    if not active_entry:
-        flash('No active timer to stop', 'error')
-        return redirect(url_for('timer_page'))
-    
-    completed_entry = time_tracker.stop_timer()
-    if completed_entry:
-        duration_hours = completed_entry.get_duration_hours()
-        task = task_manager.get_task(completed_entry.task_id)
-        task_title = task.title if task else "Unknown Task"
-        flash(f'Timer stopped! Duration: {duration_hours:.2f} hours for "{task_title}"', 'success')
-    else:
-        flash('Failed to stop timer', 'error')
-    
-    return redirect(url_for('timer_page'))
-
-@app.route('/api/timer/status')
-def timer_status():
-    """API endpoint to get current timer status."""
-    active_entry = time_tracker.get_active_entry()
-    if not active_entry:
-        return jsonify({'active': False})
-    
-    task = task_manager.get_task(active_entry.task_id)
-    start_time = datetime.fromisoformat(active_entry.start_time)
-    elapsed_seconds = int((datetime.now() - start_time).total_seconds())
-    
-    return jsonify({
-        'active': True,
-        'task_title': task.title if task else "Unknown Task",
-        'start_time': active_entry.start_time,
-        'elapsed_seconds': elapsed_seconds,
-        'description': active_entry.description
-    })
 
 @app.route('/reports')
 def reports():
     """Reports overview page."""
     return render_template('reports.html')
 
-@app.route('/reports/tasks')
-def report_tasks():
-    """Task time report."""
-    tasks = task_manager.get_all_tasks()
-    tasks_with_time = []
-    
-    for task in tasks:
-        total_time = time_tracker.get_total_time_for_task(task.id)
-        if total_time > 0:
-            tasks_with_time.append({
-                'task': task,
-                'total_time': total_time,
-                'percentage': 0  # Will be calculated below
-            })
-    
-    # Sort by time spent (descending)
-    tasks_with_time.sort(key=lambda x: x['total_time'], reverse=True)
-    
-    # Calculate percentages
-    total_all_time = sum(item['total_time'] for item in tasks_with_time)
-    if total_all_time > 0:
-        for item in tasks_with_time:
-            item['percentage'] = (item['total_time'] / total_all_time) * 100
-    
-    return render_template('report_tasks.html', 
-                         tasks_with_time=tasks_with_time,
-                         total_time=total_all_time)
-
 @app.route('/reports/customers')
 def report_customers():
-    """Customer time report."""
+    """Customer hours report."""
     customers = task_manager.get_customers()
     customer_data = []
     
     for customer in customers:
         tasks = task_manager.get_tasks_by_customer(customer)
-        total_time = sum(time_tracker.get_total_time_for_task(task.id) for task in tasks)
-        if total_time > 0:
+        total_hours = sum(task.hours for task in tasks)
+        if total_hours > 0:
             customer_data.append({
                 'customer': customer,
-                'total_time': total_time,
+                'total_hours': total_hours,
                 'task_count': len(tasks),
                 'percentage': 0
             })
     
-    # Sort by time spent (descending)
-    customer_data.sort(key=lambda x: x['total_time'], reverse=True)
+    # Sort by hours (descending)
+    customer_data.sort(key=lambda x: x['total_hours'], reverse=True)
     
     # Calculate percentages
-    total_all_time = sum(item['total_time'] for item in customer_data)
-    if total_all_time > 0:
+    total_all_hours = sum(item['total_hours'] for item in customer_data)
+    if total_all_hours > 0:
         for item in customer_data:
-            item['percentage'] = (item['total_time'] / total_all_time) * 100
+            item['percentage'] = (item['total_hours'] / total_all_hours) * 100
     
     return render_template('report_customers.html', 
                          customer_data=customer_data,
-                         total_time=total_all_time)
+                         total_hours=total_all_hours)
 
-@app.route('/reports/projects')
-def report_projects():
-    """Project time report."""
-    projects = task_manager.get_projects()
-    project_data = []
+@app.route('/reports/departments')
+def report_departments():
+    """Department hours report."""
+    departments = task_manager.get_departments()
+    department_data = []
     
-    for project in projects:
-        tasks = task_manager.get_tasks_by_project(project)
-        total_time = sum(time_tracker.get_total_time_for_task(task.id) for task in tasks)
-        if total_time > 0:
-            project_data.append({
-                'project': project,
-                'total_time': total_time,
+    for department in departments:
+        tasks = task_manager.get_tasks_by_department(department)
+        total_hours = sum(task.hours for task in tasks)
+        if total_hours > 0:
+            department_data.append({
+                'department': department,
+                'total_hours': total_hours,
                 'task_count': len(tasks),
                 'percentage': 0
             })
     
-    # Sort by time spent (descending)
-    project_data.sort(key=lambda x: x['total_time'], reverse=True)
+    # Sort by hours (descending)
+    department_data.sort(key=lambda x: x['total_hours'], reverse=True)
     
     # Calculate percentages
-    total_all_time = sum(item['total_time'] for item in project_data)
-    if total_all_time > 0:
-        for item in project_data:
-            item['percentage'] = (item['total_time'] / total_all_time) * 100
+    total_all_hours = sum(item['total_hours'] for item in department_data)
+    if total_all_hours > 0:
+        for item in department_data:
+            item['percentage'] = (item['total_hours'] / total_all_hours) * 100
     
-    return render_template('report_projects.html', 
-                         project_data=project_data,
-                         total_time=total_all_time)
-
-@app.route('/reports/entries')
-def report_entries():
-    """All time entries report."""
-    entries = time_tracker.get_all_time_entries()
-    
-    # Sort by start time (most recent first)
-    entries.sort(key=lambda e: e.start_time, reverse=True)
-    
-    # Add task information to entries
-    entries_with_tasks = []
-    total_time = 0
-    
-    for entry in entries:
-        task = task_manager.get_task(entry.task_id)
-        duration = entry.get_duration_hours() if entry.end_time else 0
-        total_time += duration
-        
-        entries_with_tasks.append({
-            'entry': entry,
-            'task': task,
-            'duration': duration
-        })
-    
-    return render_template('report_entries.html', 
-                         entries_with_tasks=entries_with_tasks,
-                         total_time=total_time)
+    return render_template('report_departments.html', 
+                         department_data=department_data,
+                         total_hours=total_all_hours)
 
 @app.template_filter('datetime')
 def datetime_filter(value):

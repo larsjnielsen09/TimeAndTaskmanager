@@ -11,14 +11,12 @@
                 Dashboard
             </h1>
             <div class="btn-group">
-                <a href="{{ url_for('create_task') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> New Task
+                <a href="{{ url_for('list_tasks') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-list-task"></i> View All Tasks
                 </a>
-                {% if active_tasks %}
-                <a href="{{ url_for('timer_page') }}" class="btn btn-success">
-                    <i class="bi bi-stopwatch"></i> Start Timer
+                <a href="{{ url_for('reports') }}" class="btn btn-outline-info">
+                    <i class="bi bi-graph-up"></i> Reports
                 </a>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -31,8 +29,8 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h5 class="card-title">Active Tasks</h5>
-                        <h2>{{ active_tasks|length }}</h2>
+                        <h5 class="card-title">Total Tasks</h5>
+                        <h2>{{ total_tasks }}</h2>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-list-task" style="font-size: 2rem;"></i>
@@ -47,11 +45,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h5 class="card-title">Completed</h5>
-                        <h2>{{ completed_tasks|length }}</h2>
+                        <h5 class="card-title">Total Hours</h5>
+                        <h2>{{ "%.1f"|format(total_hours) }}</h2>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                        <i class="bi bi-clock" style="font-size: 2rem;"></i>
                     </div>
                 </div>
             </div>
@@ -63,11 +61,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h5 class="card-title">Total Tasks</h5>
-                        <h2>{{ tasks|length }}</h2>
+                        <h5 class="card-title">Customers</h5>
+                        <h2>{{ total_customers }}</h2>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-collection" style="font-size: 2rem;"></i>
+                        <i class="bi bi-people" style="font-size: 2rem;"></i>
                     </div>
                 </div>
             </div>
@@ -79,11 +77,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h5 class="card-title">Today's Time</h5>
-                        <h2>{{ "%.1f"|format(total_time_today) }}h</h2>
+                        <h5 class="card-title">Departments</h5>
+                        <h2>{{ total_departments }}</h2>
                     </div>
                     <div class="align-self-center">
-                        <i class="bi bi-clock" style="font-size: 2rem;"></i>
+                        <i class="bi bi-building" style="font-size: 2rem;"></i>
                     </div>
                 </div>
             </div>
@@ -91,146 +89,101 @@
     </div>
 </div>
 
-<!-- Active Timer -->
-{% if active_entry %}
-<div class="row mb-4">
-    <div class="col-12">
-        {% set active_task = task_manager.get_task(active_entry.task_id) %}
-        <div class="alert alert-success border-start border-success border-4">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h5 class="alert-heading">
-                        <i class="bi bi-play-circle-fill"></i>
-                        Timer Active
-                    </h5>
-                    <p class="mb-0">
-                        <strong>{{ active_task.title if active_task else "Unknown Task" }}</strong>
-                        {% if active_task %}
-                        <br><small class="text-muted">{{ active_task.customer }} - {{ active_task.project }}</small>
-                        {% endif %}
-                    </p>
-                    {% if active_entry.description %}
-                    <p class="mb-0 mt-1"><small>{{ active_entry.description }}</small></p>
-                    {% endif %}
-                </div>
-                <div class="col-md-4 text-end">
-                    <div id="active-timer-display" class="h4 text-success mb-2">00:00:00</div>
-                    <form method="post" action="{{ url_for('stop_timer') }}" class="d-inline">
-                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-stop-circle"></i> Stop Timer
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Recent Tasks -->
+<!-- Main Content - Two Column Layout -->
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-6">
+        <!-- Quick Add Task Form -->
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-list-task"></i>
-                    Recent Tasks
+                    <i class="bi bi-plus-circle"></i>
+                    Quick Add Task
                 </h5>
-                <a href="{{ url_for('list_tasks') }}" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
             <div class="card-body">
-                {% if tasks %}
-                <div class="list-group list-group-flush">
-                    {% for task in tasks[:5] %}
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div class="ms-2 me-auto">
-                            <div class="fw-bold">
-                                {% if task.status == 'completed' %}
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                {% elif task.status == 'paused' %}
-                                    <i class="bi bi-pause-circle-fill text-warning"></i>
-                                {% else %}
-                                    <i class="bi bi-play-circle text-primary"></i>
-                                {% endif %}
-                                <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
-                                    {{ task.title }}
-                                </a>
-                            </div>
-                            <small class="text-muted">{{ task.customer }} - {{ task.project }}</small>
-                            {% if task.description %}
-                            <div><small class="text-muted">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</small></div>
-                            {% endif %}
+                <form method="post" action="{{ url_for('create_task') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="customer" class="form-label">Customer <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customer" name="customer" required>
                         </div>
-                        <div class="text-end">
-                            <span class="badge {{ task.status|status_badge }}">{{ task.status }}</span>
-                            <br><small class="text-muted">{{ (task.created_at)|datetime }}</small>
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="department" name="department" required>
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-4">
-                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-2">No tasks yet. <a href="{{ url_for('create_task') }}">Create your first task!</a></p>
-                </div>
-                {% endif %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hours" class="form-label">Hours <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="hours" name="hours" 
+                                   step="0.25" min="0.25" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Add Task
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
     
-    <div class="col-md-4">
-        <!-- Quick Actions -->
-        <div class="card mb-3">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-lightning"></i>
-                    Quick Actions
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('create_task') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> New Task
-                    </a>
-                    {% if active_tasks %}
-                    <a href="{{ url_for('timer_page') }}" class="btn btn-success">
-                        <i class="bi bi-stopwatch"></i> Start Timer
-                    </a>
-                    {% endif %}
-                    <a href="{{ url_for('reports') }}" class="btn btn-outline-info">
-                        <i class="bi bi-graph-up"></i> View Reports
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Recent Activity -->
+    <div class="col-md-6">
+        <!-- Recent Tasks -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="bi bi-activity"></i>
-                    Activity Summary
+                    <i class="bi bi-clock-history"></i>
+                    Recent Tasks (Last 10)
                 </h5>
+                <a href="{{ url_for('list_tasks') }}" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-12 mb-2">
-                        <div class="border-bottom pb-2">
-                            <div class="h5 text-primary">{{ task_manager.get_customers()|length }}</div>
-                            <small class="text-muted">Customers</small>
-                        </div>
-                    </div>
-                    <div class="col-12 mb-2">
-                        <div class="border-bottom pb-2">
-                            <div class="h5 text-info">{{ task_manager.get_projects()|length }}</div>
-                            <small class="text-muted">Projects</small>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="h5 text-warning">{{ "%.1f"|format(total_time_today) }}h</div>
-                        <small class="text-muted">Today</small>
-                    </div>
+                {% if recent_tasks %}
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Department</th>
+                                <th>Date</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in recent_tasks %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
+                                        {{ task.customer }}
+                                    </a>
+                                </td>
+                                <td>{{ task.department }}</td>
+                                <td>{{ task.date }}</td>
+                                <td><strong>{{ task.hours }}h</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No tasks yet. Use the form to add your first task!</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -238,31 +191,14 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if active_entry %}
 <script>
+// Set today's date as default
 document.addEventListener('DOMContentLoaded', function() {
-    const startTime = new Date('{{ active_entry.start_time }}');
-    
-    function updateActiveTimer() {
-        const now = new Date();
-        const elapsed = Math.floor((now - startTime) / 1000);
-        
-        const hours = Math.floor(elapsed / 3600);
-        const minutes = Math.floor((elapsed % 3600) / 60);
-        const seconds = elapsed % 60;
-        
-        const display = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        const activeTimer = document.getElementById('active-timer-display');
-        if (activeTimer) {
-            activeTimer.textContent = display;
-        }
+    const dateInput = document.getElementById('date');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
     }
-    
-    // Update timer every second
-    updateActiveTimer();
-    setInterval(updateActiveTimer, 1000);
 });
 </script>
-{% endif %}
 {% endblock %}

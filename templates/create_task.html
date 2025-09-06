@@ -15,23 +15,29 @@
             <div class="card-body">
                 <form method="post">
                     <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label for="title" class="form-label">Task Title <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="title" name="title" required>
-                            <div class="form-text">Enter a descriptive title for your task</div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="customer" class="form-label">Customer <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="customer" name="customer" required>
                             <div class="form-text">Client or customer name</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="project" class="form-label">Project <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="project" name="project" required>
-                            <div class="form-text">Project name or identifier</div>
+                            <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="department" name="department" required>
+                            <div class="form-text">Department name</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                            <div class="form-text">Date of the task</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hours" class="form-label">Hours <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="hours" name="hours" 
+                                   step="0.25" min="0.25" required>
+                            <div class="form-text">Number of hours worked</div>
                         </div>
                     </div>
                     
@@ -39,16 +45,7 @@
                         <div class="col-md-12">
                             <label for="description" class="form-label">Description</label>
                             <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                            <div class="form-text">Optional detailed description of the task</div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="estimated_hours" class="form-label">Estimated Hours</label>
-                            <input type="number" class="form-control" id="estimated_hours" name="estimated_hours" 
-                                   step="0.25" min="0" placeholder="0">
-                            <div class="form-text">How long do you expect this task to take?</div>
+                            <div class="form-text">Optional description of the work performed</div>
                         </div>
                     </div>
                     
@@ -67,4 +64,17 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+});
+</script>
 {% endblock %}

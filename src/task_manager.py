@@ -13,14 +13,13 @@ from uuid import uuid4
 class Task:
     """Task data model."""
     id: str
-    title: str
-    description: str
     customer: str
-    project: str
-    status: str  # 'active', 'completed', 'paused'
+    department: str
+    date: str
+    hours: float
+    description: str
     created_at: str
     updated_at: str
-    estimated_hours: float = 0.0
     
     def to_dict(self) -> Dict:
         """Convert task to dictionary."""
@@ -61,22 +60,21 @@ class TaskManager:
             data = {task_id: task.to_dict() for task_id, task in self.tasks.items()}
             json.dump(data, f, indent=2, ensure_ascii=False)
     
-    def create_task(self, title: str, description: str, customer: str, 
-                   project: str, estimated_hours: float = 0.0) -> Task:
+    def create_task(self, customer: str, department: str, date: str, 
+                   hours: float, description: str) -> Task:
         """Create a new task."""
         task_id = str(uuid4())
         now = datetime.now().isoformat()
         
         task = Task(
             id=task_id,
-            title=title,
-            description=description,
             customer=customer,
-            project=project,
-            status='active',
+            department=department,
+            date=date,
+            hours=hours,
+            description=description,
             created_at=now,
-            updated_at=now,
-            estimated_hours=estimated_hours
+            updated_at=now
         )
         
         self.tasks[task_id] = task
@@ -95,9 +93,9 @@ class TaskManager:
         """Get all tasks for a specific customer."""
         return [task for task in self.tasks.values() if task.customer == customer]
     
-    def get_tasks_by_project(self, project: str) -> List[Task]:
-        """Get all tasks for a specific project."""
-        return [task for task in self.tasks.values() if task.project == project]
+    def get_tasks_by_department(self, department: str) -> List[Task]:
+        """Get all tasks for a specific department."""
+        return [task for task in self.tasks.values() if task.department == department]
     
     def update_task(self, task_id: str, **kwargs) -> Optional[Task]:
         """Update a task."""
@@ -107,7 +105,7 @@ class TaskManager:
         task = self.tasks[task_id]
         
         # Update allowed fields
-        allowed_fields = ['title', 'description', 'customer', 'project', 'status', 'estimated_hours']
+        allowed_fields = ['customer', 'department', 'date', 'hours', 'description']
         for field, value in kwargs.items():
             if field in allowed_fields and hasattr(task, field):
                 setattr(task, field, value)
@@ -128,6 +126,6 @@ class TaskManager:
         """Get list of unique customers."""
         return list(set(task.customer for task in self.tasks.values()))
     
-    def get_projects(self) -> List[str]:
-        """Get list of unique projects."""
-        return list(set(task.project for task in self.tasks.values()))
+    def get_departments(self) -> List[str]:
+        """Get list of unique departments."""
+        return list(set(task.department for task in self.tasks.values()))

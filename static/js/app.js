@@ -3,9 +3,6 @@
  * Handles timer updates, interactive features, and API calls
  */
 
-// Global timer state
-let timerInterval = null;
-let timerStartTime = null;
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,12 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
  * Initialize the application
  */
 function initializeApp() {
-    // Check for active timer and update navbar indicator
-    updateTimerStatus();
-    
-    // Set up periodic timer status updates
-    setInterval(updateTimerStatus, 5000); // Check every 5 seconds
-    
     // Initialize tooltips if Bootstrap is available
     if (typeof bootstrap !== 'undefined') {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -46,84 +37,6 @@ function initializeApp() {
     }
 }
 
-/**
- * Update timer status in the navbar
- */
-function updateTimerStatus() {
-    fetch('/api/timer/status')
-        .then(response => response.json())
-        .then(data => {
-            const timerIndicator = document.getElementById('timer-indicator');
-            const timerText = document.getElementById('timer-text');
-            
-            if (data.active) {
-                // Show timer indicator
-                if (timerIndicator) {
-                    timerIndicator.style.display = 'block';
-                    timerStartTime = new Date(data.start_time);
-                    startTimerDisplay();
-                }
-            } else {
-                // Hide timer indicator
-                if (timerIndicator) {
-                    timerIndicator.style.display = 'none';
-                    stopTimerDisplay();
-                }
-            }
-        })
-        .catch(error => {
-            console.log('Timer status check failed:', error);
-        });
-}
-
-/**
- * Start the timer display update
- */
-function startTimerDisplay() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-    }
-    
-    timerInterval = setInterval(updateTimerDisplay, 1000);
-    updateTimerDisplay(); // Update immediately
-}
-
-/**
- * Stop the timer display update
- */
-function stopTimerDisplay() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-}
-
-/**
- * Update the timer display
- */
-function updateTimerDisplay() {
-    if (!timerStartTime) return;
-    
-    const now = new Date();
-    const elapsed = Math.floor((now - timerStartTime) / 1000);
-    
-    const hours = Math.floor(elapsed / 3600);
-    const minutes = Math.floor((elapsed % 3600) / 60);
-    const seconds = elapsed % 60;
-    
-    const display = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-    const timerText = document.getElementById('timer-text');
-    if (timerText) {
-        timerText.textContent = display;
-    }
-    
-    // Also update any active timer displays on the current page
-    const activeTimerDisplays = document.querySelectorAll('#active-timer-display');
-    activeTimerDisplays.forEach(element => {
-        element.textContent = display;
-    });
-}
 
 /**
  * Format duration in seconds to human readable format
@@ -329,12 +242,12 @@ document.addEventListener('keydown', function(e) {
         }
     }
     
-    // Ctrl/Cmd + T: Timer page
+    // Ctrl/Cmd + T: Tasks page
     if ((e.ctrlKey || e.metaKey) && e.key === 't') {
         e.preventDefault();
-        const timerLink = document.querySelector('a[href*="timer"]');
-        if (timerLink) {
-            window.location.href = timerLink.href;
+        const tasksLink = document.querySelector('a[href*="tasks"]');
+        if (tasksLink) {
+            window.location.href = tasksLink.href;
         }
     }
     
@@ -354,7 +267,6 @@ document.addEventListener('keydown', function(e) {
  * Export functions for use in other scripts
  */
 window.TaskManager = {
-    updateTimerStatus,
     formatDuration,
     formatDateTime,
     showLoading,
