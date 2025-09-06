@@ -20,7 +20,7 @@
 <!-- Summary Card -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card bg-info text-white">
+        <div class="card" style="background-color: #1F2937; color: white; border: 1px solid var(--border-color);">
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-3">
@@ -87,7 +87,7 @@
                                 <td>
                                     <strong>{{ "%.2f"|format(item.total_hours) }}h</strong>
                                     <div class="progress mt-1" style="height: 4px;">
-                                        <div class="progress-bar bg-info" style="width: {{ (item.total_hours / customer_data[0].total_hours * 100) if customer_data else 0 }}%"></div>
+                                        <div class="progress-bar" style="background-color: var(--primary-orange); width: {{ (item.total_hours / customer_data[0].total_hours * 100) if customer_data else 0 }}%"></div>
                                     </div>
                                 </td>
                                 <td>
@@ -168,7 +168,7 @@
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-12 mb-3">
-                        <div class="h5 text-info">{{ "%.1f"|format(customer_data[0].total_hours) }}h</div>
+                        <div class="h5" style="color: var(--primary-orange);">{{ "%.1f"|format(customer_data[0].total_hours) }}h</div>
                         <small class="text-muted">Highest: {{ customer_data[0].customer }}</small>
                     </div>
                     <div class="col-6">

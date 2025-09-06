@@ -108,6 +108,35 @@ body.modern-layout * {
     color: white !important;
 }
 
+/* Override Bootstrap info colors with primary orange */
+.btn-info {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+    color: white !important;
+}
+
+.btn-info:hover {
+    background-color: #E43E1E !important;
+    border-color: #E43E1E !important;
+}
+
+.bg-info {
+    background-color: var(--primary-orange) !important;
+}
+
+.text-info {
+    color: var(--primary-orange) !important;
+}
+
+.progress-bar.bg-info {
+    background-color: var(--primary-orange) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--primary-orange) !important;
+    color: white !important;
+}
+
 /* Base Styles */
 * {
     margin: 0;
