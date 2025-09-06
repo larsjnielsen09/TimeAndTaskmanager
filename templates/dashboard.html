@@ -1,88 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Time and Task Manager{% endblock %}
+{% block title %}Dashboard - Timely{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h2">
-                <i class="bi bi-house"></i>
-                Dashboard
-            </h1>
-            <div class="btn-group">
-                <a href="{{ url_for('list_tasks') }}" class="btn btn-outline-primary">
-                    <i class="bi bi-list-task"></i> View All Tasks
-                </a>
-                <a href="{{ url_for('reports') }}" class="btn btn-outline-info">
-                    <i class="bi bi-graph-up"></i> Reports
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Total Tasks</h5>
-                        <h2>{{ total_tasks }}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-list-task" style="font-size: 2rem;"></i>
-                    </div>
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-label">Total Tasks</div>
+                    <div class="stat-value">{{ total_tasks }}</div>
+                </div>
+                <div class="stat-icon tasks">
+                    <i class="bi bi-list-task"></i>
                 </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Total Hours</h5>
-                        <h2>{{ "%.1f"|format(total_hours) }}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-clock" style="font-size: 2rem;"></i>
-                    </div>
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-label">Total Hours</div>
+                    <div class="stat-value">{{ "%.1f"|format(total_hours) }}</div>
+                </div>
+                <div class="stat-icon hours">
+                    <i class="bi bi-clock"></i>
                 </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Customers</h5>
-                        <h2>{{ total_customers }}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-people" style="font-size: 2rem;"></i>
-                    </div>
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-label">Customers</div>
+                    <div class="stat-value">{{ total_customers }}</div>
+                </div>
+                <div class="stat-icon customers">
+                    <i class="bi bi-people"></i>
                 </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Departments</h5>
-                        <h2>{{ total_departments }}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-building" style="font-size: 2rem;"></i>
-                    </div>
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-label">Departments</div>
+                    <div class="stat-value">{{ total_departments }}</div>
+                </div>
+                <div class="stat-icon departments">
+                    <i class="bi bi-diagram-2"></i>
                 </div>
             </div>
         </div>
@@ -93,112 +68,249 @@
 <div class="row">
     <div class="col-md-6">
         <!-- Quick Add Task Form -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-plus-circle"></i>
-                    Quick Add Task
-                </h5>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{{ url_for('create_task') }}">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="customer" class="form-label">Customer <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="customer" name="customer" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="department" name="department" required>
-                        </div>
+        <div class="quick-form">
+            <h5 class="mb-4">Quick Add Task</h5>
+            <form method="post" action="{{ url_for('create_task') }}">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="customer_id" class="form-label">Customer</label>
+                        <select class="form-select" id="customer_id" name="customer_id" required>
+                            <option value="">Select customer...</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="date" name="date" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="hours" class="form-label">Hours <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="hours" name="hours" 
-                                   step="0.25" min="0.25" required>
-                        </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="department_id" class="form-label">Department</label>
+                        <select class="form-select" id="department_id" name="department_id" required>
+                            <option value="">Select department...</option>
+                        </select>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
                     </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Add Task
-                        </button>
+                    <div class="col-md-6">
+                        <label for="hours" class="form-label">Hours</label>
+                        <input type="number" class="form-control" id="hours" name="hours" 
+                               step="0.1" min="0.1" placeholder="0.0" required>
                     </div>
-                </form>
-            </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Add Task
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
     <div class="col-md-6">
         <!-- Recent Tasks -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="bi bi-clock-history"></i>
-                    Recent Tasks (Last 10)
-                </h5>
-                <a href="{{ url_for('list_tasks') }}" class="btn btn-sm btn-outline-primary">View All</a>
+        <div class="recent-tasks">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h5 class="mb-0">Recent Tasks (Last 10)</h5>
+                <a href="{{ url_for('list_tasks') }}" class="view-all-link">View all tasks</a>
             </div>
-            <div class="card-body">
-                {% if recent_tasks %}
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm table-hover">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Department</th>
-                                <th>Date</th>
-                                <th>Hours</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for task in recent_tasks %}
-                            <tr>
-                                <td>
-                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
-                                        {{ task.customer }}
-                                    </a>
-                                </td>
-                                <td>{{ task.department }}</td>
-                                <td>{{ task.date }}</td>
-                                <td><strong>{{ task.hours }}h</strong></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="text-center py-4">
-                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-2">No tasks yet. Use the form to add your first task!</p>
-                </div>
-                {% endif %}
+            
+            {% if recent_tasks %}
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th class="sortable-header" data-column="customer">
+                                Customer
+                                <i class="bi bi-chevron-expand sort-icon ms-1"></i>
+                            </th>
+                            <th class="sortable-header" data-column="department">
+                                Department
+                                <i class="bi bi-chevron-expand sort-icon ms-1"></i>
+                            </th>
+                            <th class="sortable-header" data-column="date">
+                                Date
+                                <i class="bi bi-chevron-expand sort-icon ms-1"></i>
+                            </th>
+                            <th class="sortable-header" data-column="hours">
+                                Hours
+                                <i class="bi bi-chevron-expand sort-icon ms-1"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in recent_tasks %}
+                        <tr>
+                            <td>
+                                {% set customer = customer_manager.get_customer(task.customer_id) %}
+                                {{ customer.name if customer else 'Unknown' }}
+                            </td>
+                            <td>
+                                {% set department = department_manager.get_department(task.department_id) %}
+                                {{ department.name if department else 'Unknown' }}
+                            </td>
+                            <td>{{ task.date }}</td>
+                            <td><strong>{{ task.hours }}h</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">No tasks yet. Create your first task!</p>
+            </div>
+            {% endif %}
         </div>
     </div>
+</div>
+
+<!-- Footer -->
+<div class="footer mt-5">
+    © 2023 Time and Task Manager. Built with love.
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Set today's date as default
+// Set today's date as default and handle customer/department dropdowns
 document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.getElementById('date');
     if (dateInput && !dateInput.value) {
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
     }
+    
+    // Handle customer selection changes for dashboard quick form
+    const customerSelect = document.getElementById('customer_id');
+    const departmentSelect = document.getElementById('department_id');
+    
+    customerSelect.addEventListener('change', function() {
+        const customerId = this.value;
+        
+        // Clear department options
+        departmentSelect.innerHTML = '<option value="">Loading...</option>';
+        departmentSelect.disabled = true;
+        
+        if (customerId) {
+            // Fetch departments for selected customer
+            fetch(`/api/customers/${customerId}/departments`)
+                .then(response => response.json())
+                .then(departments => {
+                    departmentSelect.innerHTML = '<option value="">Select department...</option>';
+                    departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.id;
+                        option.textContent = dept.name;
+                        departmentSelect.appendChild(option);
+                    });
+                    departmentSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching departments:', error);
+                    departmentSelect.innerHTML = '<option value="">Error loading</option>';
+                    departmentSelect.disabled = false;
+                });
+        } else {
+            departmentSelect.innerHTML = '<option value="">Select customer first...</option>';
+            departmentSelect.disabled = false;
+        }
+    });
+    
+    // Table sorting functionality
+    const sortableHeaders = document.querySelectorAll('.sortable-header');
+    let currentSort = { column: null, direction: null };
+    
+    // Store original row order (newest added first by creation time)
+    const table = document.querySelector('.recent-tasks table tbody');
+    const originalRows = table ? Array.from(table.querySelectorAll('tr')).map(row => row.cloneNode(true)) : [];
+    
+    // Function to restore default sorting
+    function restoreDefaultSort() {
+        if (table && originalRows.length > 0) {
+            table.innerHTML = '';
+            originalRows.forEach(row => {
+                table.appendChild(row.cloneNode(true));
+            });
+            // Clear sort indicators
+            sortableHeaders.forEach(h => {
+                h.classList.remove('sort-asc', 'sort-desc');
+            });
+            currentSort = { column: null, direction: null };
+        }
+    }
+    
+    // Make restoreDefaultSort available globally for refresh functionality
+    window.restoreDefaultSort = restoreDefaultSort;
+    
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            const table = this.closest('table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Determine sort direction
+            let direction = 'asc';
+            if (currentSort.column === column && currentSort.direction === 'asc') {
+                direction = 'desc';
+            }
+            
+            // Update visual indicators
+            sortableHeaders.forEach(h => {
+                h.classList.remove('sort-asc', 'sort-desc');
+            });
+            this.classList.add(`sort-${direction}`);
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(column) {
+                    case 'customer':
+                        aValue = a.cells[0].textContent.trim();
+                        bValue = b.cells[0].textContent.trim();
+                        break;
+                    case 'department':
+                        aValue = a.cells[1].textContent.trim();
+                        bValue = b.cells[1].textContent.trim();
+                        break;
+                    case 'date':
+                        aValue = new Date(a.cells[2].textContent.trim());
+                        bValue = new Date(b.cells[2].textContent.trim());
+                        break;
+                    case 'hours':
+                        aValue = parseFloat(a.cells[3].textContent.replace('h', ''));
+                        bValue = parseFloat(b.cells[3].textContent.replace('h', ''));
+                        break;
+                }
+                
+                if (direction === 'asc') {
+                    return aValue > bValue ? 1 : -1;
+                } else {
+                    return aValue < bValue ? 1 : -1;
+                }
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // Update current sort
+            currentSort = { column, direction };
+        });
+    });
 });
 </script>
 {% endblock %}

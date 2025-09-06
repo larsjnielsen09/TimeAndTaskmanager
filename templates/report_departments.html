@@ -20,7 +20,7 @@
 <!-- Summary Card -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card bg-warning text-dark">
+        <div class="card" style="background-color: var(--primary-orange); color: white;">
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-3">
@@ -73,10 +73,11 @@
                     <tr>
                         <td>
                             <span class="badge 
-                                {% if loop.index == 1 %}bg-warning text-dark
+                                {% if loop.index == 1 %}text-dark
                                 {% elif loop.index == 2 %}bg-secondary
                                 {% elif loop.index == 3 %}bg-dark
-                                {% else %}bg-light text-dark{% endif %}">
+                                {% else %}bg-light text-dark{% endif %}"
+                                {% if loop.index == 1 %}style="background-color: var(--primary-orange);"{% endif %}>
                                 #{{ loop.index }}
                             </span>
                         </td>
@@ -86,7 +87,7 @@
                         <td>
                             <strong>{{ "%.2f"|format(item.total_hours) }}h</strong>
                             <div class="progress mt-1" style="height: 4px;">
-                                <div class="progress-bar bg-warning" style="width: {{ (item.total_hours / department_data[0].total_hours * 100) if department_data else 0 }}%"></div>
+                                <div class="progress-bar" style="background-color: var(--primary-orange); width: {{ (item.total_hours / department_data[0].total_hours * 100) if department_data else 0 }}%"></div>
                             </div>
                         </td>
                         <td>
@@ -167,7 +168,7 @@
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-12 mb-3">
-                        <div class="h5 text-warning">{{ "%.1f"|format(department_data[0].total_hours) }}h</div>
+                        <div class="h5" style="color: var(--primary-orange);">{{ "%.1f"|format(department_data[0].total_hours) }}h</div>
                         <small class="text-muted">Highest: {{ department_data[0].department }}</small>
                     </div>
                     <div class="col-6">
@@ -199,15 +200,15 @@
                     {% for item in department_data %}
                     <div class="col-md-4 col-lg-3 mb-3">
                         <div class="card h-100 shadow-sm">
-                            <div class="card-header bg-warning text-dark">
-                                <h6 class="mb-0">{{ item.department }}</h6>
+                            <div class="card-header text-dark" style="background-color: var(--primary-orange); color: white !important;">
+                                <h6 class="mb-0" style="color: white !important;">{{ item.department }}</h6>
                             </div>
                             <div class="card-body text-center">
                                 <div class="h4 text-primary">{{ "%.1f"|format(item.total_hours) }}h</div>
                                 <p class="mb-2">{{ item.task_count }} tasks</p>
                                 
                                 <div class="progress mb-2" style="height: 8px;">
-                                    <div class="progress-bar bg-warning" style="width: {{ item.percentage }}%"></div>
+                                    <div class="progress-bar" style="background-color: var(--primary-orange); width: {{ item.percentage }}%"></div>
                                 </div>
                                 <small class="text-muted">{{ "%.1f"|format(item.percentage) }}% of total</small>
                                 

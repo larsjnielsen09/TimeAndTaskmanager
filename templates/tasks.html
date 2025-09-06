@@ -32,8 +32,8 @@
                 <select name="customer" id="customer" class="form-select">
                     <option value="">All Customers</option>
                     {% for customer in customers %}
-                    <option value="{{ customer }}" {% if customer == current_customer %}selected{% endif %}>
-                        {{ customer }}
+                    <option value="{{ customer.id }}" {% if customer.id == current_customer %}selected{% endif %}>
+                        {{ customer.name }}
                     </option>
                     {% endfor %}
                 </select>
@@ -44,8 +44,8 @@
                 <select name="department" id="department" class="form-select">
                     <option value="">All Departments</option>
                     {% for department in departments %}
-                    <option value="{{ department }}" {% if department == current_department %}selected{% endif %}>
-                        {{ department }}
+                    <option value="{{ department.id }}" {% if department.id == current_department %}selected{% endif %}>
+                        {{ department.name }} ({{ customer_manager.get_customer(department.customer_id).name }})
                     </option>
                     {% endfor %}
                 </select>
@@ -105,11 +105,15 @@
                             {% for task in tasks %}
                             <tr>
                                 <td>
+                                    {% set customer = customer_manager.get_customer(task.customer_id) %}
                                     <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none fw-bold">
-                                        {{ task.customer }}
+                                        {{ customer.name if customer else 'Unknown Customer' }}
                                     </a>
                                 </td>
-                                <td>{{ task.department }}</td>
+                                <td>
+                                    {% set department = department_manager.get_department(task.department_id) %}
+                                    {{ department.name if department else 'Unknown Department' }}
+                                </td>
                                 <td>{{ task.date }}</td>
                                 <td>
                                     <strong>{{ task.hours }}h</strong>
@@ -132,7 +136,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn btn-outline-danger" 
-                                                title="Delete" onclick="deleteTask('{{ task.id }}', '{{ task.customer }}')">
+                                                title="Delete" onclick="deleteTask('{{ task.id }}', '{{ customer.name if customer else "Task" }}')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -150,7 +154,8 @@
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span class="badge bg-primary">{{ task.department }}</span>
+                            {% set department = department_manager.get_department(task.department_id) %}
+                            <span class="badge bg-primary">{{ department.name if department else 'Unknown Department' }}</span>
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ url_for('view_task', task_id=task.id) }}" 
                                    class="btn btn-outline-primary btn-sm">
@@ -164,8 +169,9 @@
                         </div>
                         <div class="card-body">
                             <h6 class="card-title">
+                                {% set customer = customer_manager.get_customer(task.customer_id) %}
                                 <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
-                                    {{ task.customer }}
+                                    {{ customer.name if customer else 'Unknown Customer' }}
                                 </a>
                             </h6>
                             <p class="card-text">

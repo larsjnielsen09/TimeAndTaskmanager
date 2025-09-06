@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-people"></i>
+                Customers
+            </h1>
+            <a href="{{ url_for('create_customer') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Customer
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Customers List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            {% if customers %}
+                All Customers ({{ customers|length }})
+            {% else %}
+                No Customers
+            {% endif %}
+        </h5>
+    </div>
+    
+    <div class="card-body">
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('view_customer', customer_id=customer.id) }}" class="text-decoration-none fw-bold">
+                                {{ customer.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if customer.email %}
+                                <a href="mailto:{{ customer.email }}" class="text-decoration-none">
+                                    {{ customer.email }}
+                                </a>
+                            {% else %}
+                                <em class="text-muted">No email</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if customer.phone %}
+                                <a href="tel:{{ customer.phone }}" class="text-decoration-none">
+                                    {{ customer.phone }}
+                                </a>
+                            {% else %}
+                                <em class="text-muted">No phone</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if customer.address %}
+                                {{ customer.address[:50] }}{% if customer.address|length > 50 %}...{% endif %}
+                            {% else %}
+                                <em class="text-muted">No address</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('view_customer', customer_id=customer.id) }}" 
+                                   class="btn btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('edit_customer', customer_id=customer.id) }}" 
+                                   class="btn btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        title="Delete" onclick="deleteCustomer('{{ customer.id }}', '{{ customer.name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No customers found</h4>
+            <p class="text-muted">
+                Get started by creating your first customer!
+            </p>
+            <a href="{{ url_for('create_customer') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Customer
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete customer <strong id="deleteCustomerName"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone. Make sure the customer has no existing tasks or departments first.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Customer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteCustomer(customerId, customerName) {
+    document.getElementById('deleteCustomerName').textContent = customerName;
+    document.getElementById('deleteForm').action = `/customers/${customerId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

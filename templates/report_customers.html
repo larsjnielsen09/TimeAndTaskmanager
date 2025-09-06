@@ -73,10 +73,11 @@
                     <tr>
                         <td>
                             <span class="badge 
-                                {% if loop.index == 1 %}bg-warning
+                                {% if loop.index == 1 %}text-dark
                                 {% elif loop.index == 2 %}bg-secondary
                                 {% elif loop.index == 3 %}bg-dark
-                                {% else %}bg-light text-dark{% endif %}">
+                                {% else %}bg-light text-dark{% endif %}"
+                                {% if loop.index == 1 %}style="background-color: var(--primary-orange);"{% endif %}>
                                 #{{ loop.index }}
                             </span>
                         </td>

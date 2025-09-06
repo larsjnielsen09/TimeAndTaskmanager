@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - Customers - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-person"></i>
+                {{ customer.name }}
+            </h1>
+            <div>
+                <a href="{{ url_for('edit_customer', customer_id=customer.id) }}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Edit Customer
+                </a>
+                <a href="{{ url_for('list_customers') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Customers
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Details -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Customer Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Name</label>
+                            <div class="fw-bold">{{ customer.name }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <div>
+                                {% if customer.email %}
+                                    <a href="mailto:{{ customer.email }}" class="text-decoration-none">
+                                        {{ customer.email }}
+                                    </a>
+                                {% else %}
+                                    <em class="text-muted">No email provided</em>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Phone</label>
+                            <div>
+                                {% if customer.phone %}
+                                    <a href="tel:{{ customer.phone }}" class="text-decoration-none">
+                                        {{ customer.phone }}
+                                    </a>
+                                {% else %}
+                                    <em class="text-muted">No phone provided</em>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Address</label>
+                            <div>
+                                {% if customer.address %}
+                                    {{ customer.address }}
+                                {% else %}
+                                    <em class="text-muted">No address provided</em>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Departments -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-diagram-2"></i>
+                    Departments ({{ departments|length }})
+                </h5>
+                <a href="{{ url_for('create_department', customer_id=customer.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Add Department
+                </a>
+            </div>
+            <div class="card-body">
+                {% if departments %}
+                    <div class="list-group list-group-flush">
+                        {% for dept in departments %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">{{ dept.name }}</div>
+                                {% if dept.description %}
+                                    <small class="text-muted">{{ dept.description }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('edit_department', department_id=dept.id) }}" 
+                                   class="btn btn-outline-warning btn-sm" title="Edit Department">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm" 
+                                        title="Delete Department" onclick="deleteDepartment('{{ dept.id }}', '{{ dept.name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-diagram-2 text-muted" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mt-2">No departments</h6>
+                        <p class="text-muted">Add departments to organize tasks for this customer.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-task"></i>
+                    Recent Tasks ({{ tasks|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Department</th>
+                                    <th>Hours</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks[:10] %}
+                                <tr>
+                                    <td>{{ task.date }}</td>
+                                    <td>
+                                        {% set dept = departments|selectattr("id", "equalto", task.department_id)|first %}
+                                        {{ dept.name if dept else 'Unknown' }}
+                                    </td>
+                                    <td><strong>{{ task.hours }}h</strong></td>
+                                    <td>
+                                        {% if task.description %}
+                                            {{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}
+                                        {% else %}
+                                            <em class="text-muted">No description</em>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('view_task', task_id=task.id) }}" 
+                                           class="btn btn-outline-primary btn-sm" title="View Task">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if tasks|length > 10 %}
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('list_tasks', customer=customer.id) }}" class="btn btn-outline-primary">
+                                View All Tasks ({{ tasks|length }})
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-list-task text-muted" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mt-2">No tasks</h6>
+                        <p class="text-muted">No tasks have been created for this customer yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Stats Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart"></i>
+                    Quick Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="h4 text-primary">{{ departments|length }}</div>
+                        <small class="text-muted">Departments</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h4 text-success">{{ tasks|length }}</div>
+                        <small class="text-muted">Total Tasks</small>
+                    </div>
+                    <div class="col-12">
+                        <div class="h4 text-info">{{ "%.1f"|format(tasks|sum(attribute='hours')) }}h</div>
+                        <small class="text-muted">Total Hours</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear"></i>
+                    Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('create_department', customer_id=customer.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> Add Department
+                    </a>
+                    <a href="{{ url_for('create_task') }}?customer_id={{ customer.id }}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> Create Task
+                    </a>
+                    <a href="{{ url_for('edit_customer', customer_id=customer.id) }}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil"></i> Edit Customer
+                    </a>
+                    <hr>
+                    <button type="button" class="btn btn-outline-danger" 
+                            onclick="deleteCustomer('{{ customer.id }}', '{{ customer.name }}')">
+                        <i class="bi bi-trash"></i> Delete Customer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Department Modal -->
+<div class="modal fade" id="deleteDepartmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete department <strong id="deleteDepartmentName"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone. Make sure the department has no existing tasks first.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteDepartmentForm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Department</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Customer Modal -->
+<div class="modal fade" id="deleteCustomerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete customer <strong id="deleteCustomerName"></strong>?</p>
+                <p class="text-danger"><strong>Warning:</strong> This will also delete all departments and tasks associated with this customer. This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteCustomerForm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Customer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteDepartment(departmentId, departmentName) {
+    document.getElementById('deleteDepartmentName').textContent = departmentName;
+    document.getElementById('deleteDepartmentForm').action = `/departments/${departmentId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteDepartmentModal'));
+    modal.show();
+}
+
+function deleteCustomer(customerId, customerName) {
+    document.getElementById('deleteCustomerName').textContent = customerName;
+    document.getElementById('deleteCustomerForm').action = `/customers/${customerId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteCustomerModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
