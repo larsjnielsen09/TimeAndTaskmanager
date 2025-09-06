@@ -37,7 +37,7 @@ class CLIInterface:
             elif choice == '7':
                 self.view_time_reports()
             elif choice == '8':
-                print("Thank you for using Time and Task Manager!")\
+                print("Thank you for using Time and Task Manager!")
                 sys.exit(0)
             else:
                 print("Invalid choice. Please try again.")
