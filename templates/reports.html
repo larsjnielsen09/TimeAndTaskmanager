@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h2 mb-4">
+            <i class="bi bi-graph-up"></i>
+            Reports
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-list-task text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Task Report</h5>
+                <p class="card-text">View time spent on individual tasks with progress tracking.</p>
+                <a href="{{ url_for('report_tasks') }}" class="btn btn-primary">
+                    <i class="bi bi-eye"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-people text-info" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Customer Report</h5>
+                <p class="card-text">Analyze time allocation across different customers.</p>
+                <a href="{{ url_for('report_customers') }}" class="btn btn-info">
+                    <i class="bi bi-eye"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-folder text-warning" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Project Report</h5>
+                <p class="card-text">Track time spent on different projects and initiatives.</p>
+                <a href="{{ url_for('report_projects') }}" class="btn btn-warning">
+                    <i class="bi bi-eye"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-clock-history text-success" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Time Entries</h5>
+                <p class="card-text">Detailed log of all recorded time entries.</p>
+                <a href="{{ url_for('report_entries') }}" class="btn btn-success">
+                    <i class="bi bi-eye"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    About Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Use these reports to gain insights into your time tracking patterns and productivity:</p>
+                <ul>
+                    <li><strong>Task Report:</strong> Shows how much time you've spent on each task, comparing actual vs. estimated time.</li>
+                    <li><strong>Customer Report:</strong> Breaks down time allocation by customer, helping you understand which clients require the most attention.</li>
+                    <li><strong>Project Report:</strong> Provides project-level time tracking to help with project management and billing.</li>
+                    <li><strong>Time Entries:</strong> A chronological log of all your time tracking activities with detailed information.</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Tip:</strong> Regularly review these reports to optimize your time management and ensure accurate project billing.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

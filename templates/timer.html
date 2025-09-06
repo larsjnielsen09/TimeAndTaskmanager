@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Timer - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h2 mb-4">
+            <i class="bi bi-stopwatch"></i>
+            Timer
+        </h1>
+    </div>
+</div>
+
+<!-- Active Timer -->
+{% if active_entry %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% set active_task = task_manager.get_task(active_entry.task_id) %}
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-play-circle-fill"></i>
+                    Active Timer
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4>{{ active_task.title if active_task else "Unknown Task" }}</h4>
+                        {% if active_task %}
+                        <p class="text-muted mb-2">
+                            <strong>{{ active_task.customer }}</strong> - {{ active_task.project }}
+                        </p>
+                        {% endif %}
+                        {% if active_entry.description %}
+                        <p class="mb-0">
+                            <small><strong>Work Description:</strong> {{ active_entry.description }}</small>
+                        </p>
+                        {% endif %}
+                        <p class="text-muted mb-0">
+                            <small>Started: {{ (active_entry.start_time)|datetime }}</small>
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div id="active-timer-display" class="display-4 text-success mb-3">00:00:00</div>
+                        <form method="post" action="{{ url_for('stop_timer') }}">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="bi bi-stop-circle-fill"></i> Stop Timer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Start Timer -->
+{% if not active_entry %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-play-circle"></i>
+                    Start Timer
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_tasks %}
+                <form method="post" action="{{ url_for('start_timer') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="task_id" class="form-label">Select Task</label>
+                            <select name="task_id" id="task_id" class="form-select" required>
+                                <option value="">Choose a task to track time...</option>
+                                {% for task in active_tasks %}
+                                <option value="{{ task.id }}">
+                                    {{ task.title }} - {{ task.customer }}/{{ task.project }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="bi bi-play-circle-fill"></i> Start Timer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="description" class="form-label">Work Description (Optional)</label>
+                            <input type="text" class="form-control" id="description" name="description" 
+                                   placeholder="Brief description of what you're working on...">
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-exclamation-circle text-warning" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Active Tasks Available</h5>
+                    <p class="text-muted">You need to have active tasks before you can start timing.</p>
+                    <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create New Task
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Task List for Reference -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-task"></i>
+                    Active Tasks
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_tasks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Customer/Project</th>
+                                <th>Time Spent</th>
+                                <th>Estimated</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in active_tasks %}
+                            {% set total_time = time_tracker.get_total_time_for_task(task.id) %}
+                            <tr {% if active_entry and active_entry.task_id == task.id %}class="table-success"{% endif %}>
+                                <td>
+                                    <div class="fw-bold">
+                                        {% if active_entry and active_entry.task_id == task.id %}
+                                            <i class="bi bi-play-circle-fill text-success"></i>
+                                        {% endif %}
+                                        {{ task.title }}
+                                    </div>
+                                    {% if task.description %}
+                                    <small class="text-muted">{{ task.description[:60] }}{% if task.description|length > 60 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>{{ task.customer }}</div>
+                                    <small class="text-muted">{{ task.project }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ "%.2f"|format(total_time) }}h</strong>
+                                </td>
+                                <td>
+                                    {% if task.estimated_hours > 0 %}
+                                        {{ "%.1f"|format(task.estimated_hours) }}h
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.estimated_hours > 0 and total_time > 0 %}
+                                        {% set percentage = (total_time / task.estimated_hours * 100) %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar 
+                                                {% if percentage > 100 %}bg-danger
+                                                {% elif percentage > 80 %}bg-warning
+                                                {% else %}bg-success{% endif %}" 
+                                                style="width: {{ [percentage, 100]|min }}%">
+                                                {{ "%.0f"|format(percentage) }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No active tasks found. <a href="{{ url_for('create_task') }}">Create a task</a> to start tracking time!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Timer Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    Today's Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="h2 text-primary" id="today-total">0.0h</div>
+                    <p class="text-muted">Total Time Today</p>
+                </div>
+                <hr>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('reports') }}" class="btn btn-outline-info">
+                        <i class="bi bi-graph-up"></i> View Reports
+                    </a>
+                    <a href="{{ url_for('list_tasks') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-list-task"></i> Manage Tasks
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> New Task
+                    </a>
+                    {% if active_entry %}
+                    <form method="post" action="{{ url_for('stop_timer') }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-stop-circle"></i> Stop Current Timer
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if active_entry %}
+    // Update active timer
+    const startTime = new Date('{{ active_entry.start_time }}');
+    
+    function updateActiveTimer() {
+        const now = new Date();
+        const elapsed = Math.floor((now - startTime) / 1000);
+        
+        const hours = Math.floor(elapsed / 3600);
+        const minutes = Math.floor((elapsed % 3600) / 60);
+        const seconds = elapsed % 60;
+        
+        const display = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        const activeTimer = document.getElementById('active-timer-display');
+        if (activeTimer) {
+            activeTimer.textContent = display;
+        }
+    }
+    
+    updateActiveTimer();
+    setInterval(updateActiveTimer, 1000);
+    {% endif %}
+    
+    // Update today's total
+    updateTodayTotal();
+    
+    function updateTodayTotal() {
+        fetch('/api/timer/status')
+            .then(response => response.json())
+            .then(data => {
+                // This would need additional API endpoint for today's total
+                // For now, we'll keep it simple
+            });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-eye"></i>
+                Task Details
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Edit Task
+                </a>
+                <button type="button" class="btn btn-danger" onclick="deleteTask('{{ task.id }}', '{{ task.title }}')">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Task Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Task Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>{{ task.title }}</h4>
+                        <p class="text-muted mb-3">
+                            <strong>{{ task.customer }}</strong> - {{ task.project }}
+                        </p>
+                        {% if task.description %}
+                        <p>{{ task.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge {{ task.status|status_badge }}">{{ task.status }}</span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Created:</dt>
+                            <dd class="col-sm-8">{{ (task.created_at)|datetime }}</dd>
+                            
+                            <dt class="col-sm-4">Updated:</dt>
+                            <dd class="col-sm-8">{{ (task.updated_at)|datetime }}</dd>
+                            
+                            {% if task.estimated_hours > 0 %}
+                            <dt class="col-sm-4">Estimated:</dt>
+                            <dd class="col-sm-8">{{ "%.1f"|format(task.estimated_hours) }} hours</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Entries -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    Time Entries ({{ time_entries|length }})
+                </h5>
+                {% if task.status == 'active' %}
+                <a href="{{ url_for('timer_page') }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-play-circle"></i> Start Timer
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if time_entries %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in time_entries %}
+                            <tr {% if not entry.end_time %}class="table-warning"{% endif %}>
+                                <td>{{ (entry.start_time)|datetime|truncate(10, True, '') }}</td>
+                                <td>{{ (entry.start_time)|datetime|replace('2025-09-06 ', '') }}</td>
+                                <td>
+                                    {% if entry.end_time %}
+                                        {{ (entry.end_time)|datetime|replace('2025-09-06 ', '') }}
+                                    {% else %}
+                                        <span class="text-warning">
+                                            <i class="bi bi-play-circle-fill"></i> Active
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if entry.end_time %}
+                                        <strong>{{ "%.2f"|format(entry.get_duration_hours()) }}h</strong>
+                                    {% else %}
+                                        <span class="text-muted" id="active-duration">--</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if entry.description %}
+                                        {{ entry.description }}
+                                    {% else %}
+                                        <em class="text-muted">No description</em>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clock text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No time entries recorded yet.</p>
+                    {% if task.status == 'active' %}
+                    <a href="{{ url_for('timer_page') }}" class="btn btn-success">
+                        <i class="bi bi-play-circle"></i> Start Tracking Time
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Time Summary -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    Time Summary
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="h2 text-primary">{{ "%.2f"|format(total_time) }}h</div>
+                <p class="text-muted">Total Time Spent</p>
+                
+                {% if task.estimated_hours > 0 %}
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="h5">{{ "%.1f"|format(task.estimated_hours) }}h</div>
+                        <small class="text-muted">Estimated</small>
+                    </div>
+                    <div class="col-6">
+                        {% set percentage = (total_time / task.estimated_hours * 100) %}
+                        <div class="h5 {% if percentage > 100 %}text-danger{% elif percentage > 80 %}text-warning{% else %}text-success{% endif %}">
+                            {{ "%.0f"|format(percentage) }}%
+                        </div>
+                        <small class="text-muted">Progress</small>
+                    </div>
+                </div>
+                
+                <div class="progress mt-2" style="height: 8px;">
+                    <div class="progress-bar {% if percentage > 100 %}bg-danger{% elif percentage > 80 %}bg-warning{% else %}bg-success{% endif %}" 
+                         style="width: {{ [percentage, 100]|min }}%"></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Edit Task
+                    </a>
+                    {% if task.status == 'active' %}
+                    <a href="{{ url_for('timer_page') }}" class="btn btn-success">
+                        <i class="bi bi-play-circle"></i> Start Timer
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('list_tasks', customer=task.customer) }}" class="btn btn-outline-info">
+                        <i class="bi bi-person"></i> Other {{ task.customer }} Tasks
+                    </a>
+                    <a href="{{ url_for('list_tasks', project=task.project) }}" class="btn btn-outline-info">
+                        <i class="bi bi-folder"></i> Other {{ task.project }} Tasks
+                    </a>
+                    <hr>
+                    <button type="button" class="btn btn-danger" onclick="deleteTask('{{ task.id }}', '{{ task.title }}')">
+                        <i class="bi bi-trash"></i> Delete Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mt-4">
+    <div class="col-12">
+        <nav aria-label="Task navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('list_tasks') }}">
+                        <i class="bi bi-arrow-left"></i> Back to Tasks
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the task <strong id="deleteTaskTitle"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone and will also delete all associated time entries.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteTask(taskId, taskTitle) {
+    document.getElementById('deleteTaskTitle').textContent = taskTitle;
+    document.getElementById('deleteForm').action = `/tasks/${taskId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

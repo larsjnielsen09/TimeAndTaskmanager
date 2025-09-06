@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-list-task"></i>
+                Tasks
+            </h1>
+            <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Task
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-funnel"></i>
+            Filters
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="customer" class="form-label">Customer</label>
+                <select name="customer" id="customer" class="form-select">
+                    <option value="">All Customers</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer }}" {% if customer == current_customer %}selected{% endif %}>
+                        {{ customer }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="project" class="form-label">Project</label>
+                <select name="project" id="project" class="form-select">
+                    <option value="">All Projects</option>
+                    {% for project in projects %}
+                    <option value="{{ project }}" {% if project == current_project %}selected{% endif %}>
+                        {{ project }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="paused" {% if current_status == 'paused' %}selected{% endif %}>Paused</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                    <a href="{{ url_for('list_tasks') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tasks List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            {% if current_customer or current_project or current_status %}
+                Filtered Tasks ({{ tasks|length }} results)
+            {% else %}
+                All Tasks ({{ tasks|length }})
+            {% endif %}
+        </h5>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-secondary" onclick="toggleView('list')">
+                <i class="bi bi-list"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="toggleView('grid')">
+                <i class="bi bi-grid"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        {% if tasks %}
+        <div id="tasks-list-view">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Customer/Project</th>
+                            <th>Status</th>
+                            <th>Time Spent</th>
+                            <th>Estimated</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        {% set total_time = time_tracker.get_total_time_for_task(task.id) %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">
+                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
+                                        {{ task.title }}
+                                    </a>
+                                </div>
+                                {% if task.description %}
+                                <small class="text-muted">{{ task.description[:80] }}{% if task.description|length > 80 %}...{% endif %}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>{{ task.customer }}</div>
+                                <small class="text-muted">{{ task.project }}</small>
+                            </td>
+                            <td>
+                                <span class="badge {{ task.status|status_badge }}">{{ task.status }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ "%.2f"|format(total_time) }}h</strong>
+                                {% if task.estimated_hours > 0 and total_time > 0 %}
+                                    {% set percentage = (total_time / task.estimated_hours * 100) %}
+                                    <div class="progress mt-1" style="height: 4px;">
+                                        <div class="progress-bar 
+                                            {% if percentage > 100 %}bg-danger
+                                            {% elif percentage > 80 %}bg-warning
+                                            {% else %}bg-success{% endif %}" 
+                                            style="width: {{ [percentage, 100]|min }}%"></div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if task.estimated_hours > 0 %}
+                                    {{ "%.1f"|format(task.estimated_hours) }}h
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ (task.created_at)|datetime }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('view_task', task_id=task.id) }}" 
+                                       class="btn btn-outline-primary" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_task', task_id=task.id) }}" 
+                                       class="btn btn-outline-warning" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            title="Delete" onclick="deleteTask('{{ task.id }}', '{{ task.title }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="tasks-grid-view" style="display: none;">
+            <div class="row">
+                {% for task in tasks %}
+                {% set total_time = time_tracker.get_total_time_for_task(task.id) %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="badge {{ task.status|status_badge }}">{{ task.status }}</span>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('view_task', task_id=task.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('edit_task', task_id=task.id) }}" 
+                                   class="btn btn-outline-warning btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
+                                    {{ task.title }}
+                                </a>
+                            </h6>
+                            <p class="card-text">
+                                <small class="text-muted">{{ task.customer }} - {{ task.project }}</small>
+                            </p>
+                            {% if task.description %}
+                            <p class="card-text">
+                                <small>{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</small>
+                            </p>
+                            {% endif %}
+                            
+                            <div class="mt-auto">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="h6 text-primary">{{ "%.1f"|format(total_time) }}h</div>
+                                        <small class="text-muted">Spent</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h6 text-info">
+                                            {% if task.estimated_hours > 0 %}
+                                                {{ "%.1f"|format(task.estimated_hours) }}h
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">Estimated</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <small class="text-muted">Created {{ (task.created_at)|datetime }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No tasks found</h4>
+            <p class="text-muted">
+                {% if current_customer or current_project or current_status %}
+                    No tasks match your current filters.
+                    <a href="{{ url_for('list_tasks') }}">Clear filters</a> to see all tasks.
+                {% else %}
+                    Get started by creating your first task!
+                {% endif %}
+            </p>
+            <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Task
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the task <strong id="deleteTaskTitle"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Delete Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleView(view) {
+    const listView = document.getElementById('tasks-list-view');
+    const gridView = document.getElementById('tasks-grid-view');
+    
+    if (view === 'list') {
+        listView.style.display = 'block';
+        gridView.style.display = 'none';
+    } else {
+        listView.style.display = 'none';
+        gridView.style.display = 'block';
+    }
+}
+
+function deleteTask(taskId, taskTitle) {
+    document.getElementById('deleteTaskTitle').textContent = taskTitle;
+    document.getElementById('deleteForm').action = `/tasks/${taskId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

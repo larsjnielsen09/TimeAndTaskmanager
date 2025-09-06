@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Project Report - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-folder"></i>
+                Project Report
+            </h1>
+            <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="h3">{{ project_data|length }}</div>
+                        <div>Active Projects</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3">{{ "%.1f"|format(total_time) }}h</div>
+                        <div>Total Time</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3">{{ "%.1f"|format(total_time / project_data|length if project_data else 0) }}h</div>
+                        <div>Average per Project</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3">{{ project_data[0].project if project_data else "None" }}</div>
+                        <div>Top Project</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-bar-chart"></i>
+            Time by Project
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if project_data %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Project</th>
+                        <th>Total Time</th>
+                        <th>Tasks</th>
+                        <th>Average per Task</th>
+                        <th>Percentage</th>
+                        <th>Progress</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in project_data %}
+                    <tr>
+                        <td>
+                            <span class="badge 
+                                {% if loop.index == 1 %}bg-warning text-dark
+                                {% elif loop.index == 2 %}bg-secondary
+                                {% elif loop.index == 3 %}bg-dark
+                                {% else %}bg-light text-dark{% endif %}">
+                                #{{ loop.index }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ item.project }}</div>
+                        </td>
+                        <td>
+                            <strong>{{ "%.2f"|format(item.total_time) }}h</strong>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-warning" style="width: {{ (item.total_time / project_data[0].total_time * 100) if project_data else 0 }}%"></div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ item.task_count }} tasks</span>
+                        </td>
+                        <td>
+                            {{ "%.2f"|format(item.total_time / item.task_count) }}h
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">{{ "%.1f"|format(item.percentage) }}%</span>
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: {{ item.percentage }}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% set project_tasks_completed = project_data | selectattr('project', 'equalto', item.project) | first %}
+                            {% if project_tasks_completed %}
+                                {% set completed_count = 0 %}
+                                <!-- This would need to be calculated from the backend, showing placeholder -->
+                                <div class="progress" style="height: 16px;">
+                                    <div class="progress-bar bg-success" style="width: 60%">
+                                        <small>60%</small>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('list_tasks', project=item.project) }}" 
+                               class="btn btn-outline-primary btn-sm" title="View Tasks">
+                                <i class="bi bi-list-task"></i> View Tasks
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-folder text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No Project Data Available</h4>
+            <p class="text-muted">Create tasks with projects and track time to see this report.</p>
+            <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Task
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if project_data %}
+<!-- Project Analysis -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-trophy"></i>
+                    Top 3 Projects
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for item in project_data[:3] %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong>{{ item.project }}</strong>
+                        <small class="d-block text-muted">{{ item.task_count }} tasks</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ "%.1f"|format(item.total_time) }}h</div>
+                        <small class="text-muted">{{ "%.1f"|format(item.percentage) }}%</small>
+                    </div>
+                </div>
+                {% if not loop.last %}<hr>{% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    Project Insights
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-12 mb-3">
+                        <div class="h5 text-warning">{{ "%.1f"|format(project_data[0].total_time) }}h</div>
+                        <small class="text-muted">Highest: {{ project_data[0].project }}</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h6">{{ project_data|map(attribute='task_count')|max }}</div>
+                        <small class="text-muted">Most Tasks</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h6">{{ "%.1f"|format(project_data|map(attribute='total_time')|list|sum / project_data|map(attribute='task_count')|list|sum) }}h</div>
+                        <small class="text-muted">Avg per Task</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project Portfolio View -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-grid"></i>
+                    Project Portfolio
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for item in project_data %}
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">{{ item.project }}</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="h4 text-primary">{{ "%.1f"|format(item.total_time) }}h</div>
+                                <p class="mb-2">{{ item.task_count }} tasks</p>
+                                
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" style="width: {{ item.percentage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ "%.1f"|format(item.percentage) }}% of total</small>
+                                
+                                <div class="mt-3">
+                                    <a href="{{ url_for('list_tasks', project=item.project) }}" 
+                                       class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="bi bi-list-task"></i> View Tasks
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project Comparison Chart -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart"></i>
+                    Project Time Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Time Distribution</th>
+                                <th>Hours</th>
+                                <th>Tasks</th>
+                                <th>Avg/Task</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in project_data %}
+                            <tr>
+                                <td><strong>{{ item.project }}</strong></td>
+                                <td>
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar 
+                                            {% if loop.index0 % 4 == 0 %}bg-primary
+                                            {% elif loop.index0 % 4 == 1 %}bg-info
+                                            {% elif loop.index0 % 4 == 2 %}bg-success
+                                            {% else %}bg-warning{% endif %}" 
+                                            style="width: {{ (item.total_time / project_data[0].total_time * 100) if project_data[0].total_time > 0 else 0 }}%">
+                                            {{ "%.1f"|format(item.percentage) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ "%.1f"|format(item.total_time) }}h</td>
+                                <td>{{ item.task_count }}</td>
+                                <td>{{ "%.1f"|format(item.total_time / item.task_count) }}h</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

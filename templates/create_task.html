@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Create Task - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle"></i>
+                    Create New Task
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="title" class="form-label">Task Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                            <div class="form-text">Enter a descriptive title for your task</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="customer" class="form-label">Customer <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customer" name="customer" required>
+                            <div class="form-text">Client or customer name</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="project" class="form-label">Project <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="project" name="project" required>
+                            <div class="form-text">Project name or identifier</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            <div class="form-text">Optional detailed description of the task</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="estimated_hours" class="form-label">Estimated Hours</label>
+                            <input type="number" class="form-control" id="estimated_hours" name="estimated_hours" 
+                                   step="0.25" min="0" placeholder="0">
+                            <div class="form-text">How long do you expect this task to take?</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('list_tasks') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Tasks
+                        </a>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Create Task
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

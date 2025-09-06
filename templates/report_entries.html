@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Time Entries Report - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-clock-history"></i>
+                Time Entries Report
+            </h1>
+            <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="h3">{{ entries_with_tasks|length }}</div>
+                        <div>Total Entries</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="h3">{{ "%.2f"|format(total_time) }}h</div>
+                        <div>Total Time</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="h3">{{ "%.2f"|format(total_time / entries_with_tasks|length if entries_with_tasks else 0) }}h</div>
+                        <div>Average Duration</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Entries Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-list"></i>
+            All Time Entries
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if entries_with_tasks %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Task</th>
+                        <th>Customer/Project</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Duration</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in entries_with_tasks %}
+                    {% set entry = item.entry %}
+                    {% set task = item.task %}
+                    {% set duration = item.duration %}
+                    <tr {% if not entry.end_time %}class="table-warning"{% endif %}>
+                        <td>
+                            {% set entry_date = entry.start_time[:10] %}
+                            {{ entry_date }}
+                        </td>
+                        <td>
+                            {% if task %}
+                                <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
+                                    {{ task.title }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Unknown Task</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task %}
+                                <div>{{ task.customer }}</div>
+                                <small class="text-muted">{{ task.project }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set start_time = entry.start_time[11:19] %}
+                            {{ start_time }}
+                        </td>
+                        <td>
+                            {% if entry.end_time %}
+                                {% set end_time = entry.end_time[11:19] %}
+                                {{ end_time }}
+                            {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-play-circle-fill"></i> Active
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.end_time %}
+                                <strong>{{ "%.2f"|format(duration) }}h</strong>
+                                <small class="text-muted d-block">{{ (duration * 60)|round|int }}m</small>
+                            {% else %}
+                                <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.description %}
+                                {{ entry.description[:50] }}{% if entry.description|length > 50 %}...{% endif %}
+                            {% else %}
+                                <em class="text-muted">No description</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.end_time %}
+                                <span class="badge bg-success">Completed</span>
+                            {% else %}
+                                <span class="badge bg-primary">Active</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination info (if needed in future) -->
+        <div class="mt-3 text-center">
+            <small class="text-muted">
+                Showing all {{ entries_with_tasks|length }} time entries
+            </small>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clock text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No Time Entries Found</h4>
+            <p class="text-muted">Start tracking time on your tasks to see entries here.</p>
+            <a href="{{ url_for('timer_page') }}" class="btn btn-primary">
+                <i class="bi bi-stopwatch"></i> Start Tracking Time
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if entries_with_tasks %}
+<!-- Time Distribution by Day -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart"></i>
+                    Daily Time Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                {% set daily_totals = {} %}
+                {% for item in entries_with_tasks %}
+                    {% if item.entry.end_time %}
+                        {% set entry_date = item.entry.start_time[:10] %}
+                        {% if entry_date in daily_totals %}
+                            {% set _ = daily_totals.update({entry_date: daily_totals[entry_date] + item.duration}) %}
+                        {% else %}
+                            {% set _ = daily_totals.update({entry_date: item.duration}) %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Time</th>
+                                <th>Entries</th>
+                                <th>Average per Entry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for date, total_time in daily_totals.items() %}
+                            {% set entry_count = entries_with_tasks | selectattr('entry.start_time', 'match', '^' + date) | list | length %}
+                            <tr>
+                                <td>{{ date }}</td>
+                                <td><strong>{{ "%.2f"|format(total_time) }}h</strong></td>
+                                <td>{{ entry_count }} entries</td>
+                                <td>{{ "%.2f"|format(total_time / entry_count) }}h</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

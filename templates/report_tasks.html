@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Task Report - Time and Task Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-list-task"></i>
+                Task Report
+            </h1>
+            <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="h3">{{ tasks_with_time|length }}</div>
+                        <div>Tasks with Time</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3">{{ "%.1f"|format(total_time) }}h</div>
+                        <div>Total Time</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3">{{ "%.1f"|format(total_time / tasks_with_time|length if tasks_with_time else 0) }}h</div>
+                        <div>Average per Task</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3">{{ "%.0f"|format((tasks_with_time | selectattr('percentage', '>', 100) | list | length / tasks_with_time|length * 100) if tasks_with_time else 0) }}%</div>
+                        <div>Over Budget</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tasks Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-graph-up"></i>
+            Time by Task
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if tasks_with_time %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Customer/Project</th>
+                        <th>Status</th>
+                        <th>Time Spent</th>
+                        <th>Estimated</th>
+                        <th>Progress</th>
+                        <th>Efficiency</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in tasks_with_time %}
+                    {% set task = item.task %}
+                    {% set total_time = item.total_time %}
+                    {% set percentage = item.percentage %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">
+                                <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none">
+                                    {{ task.title }}
+                                </a>
+                            </div>
+                            {% if task.description %}
+                            <small class="text-muted">{{ task.description[:60] }}{% if task.description|length > 60 %}...{% endif %}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>{{ task.customer }}</div>
+                            <small class="text-muted">{{ task.project }}</small>
+                        </td>
+                        <td>
+                            <span class="badge {{ task.status|status_badge }}">{{ task.status }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ "%.2f"|format(total_time) }}h</strong>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-primary" style="width: {{ (total_time / (tasks_with_time|map(attribute='total_time')|max) * 100) if tasks_with_time else 0 }}%"></div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if task.estimated_hours > 0 %}
+                                {{ "%.1f"|format(task.estimated_hours) }}h
+                            {% else %}
+                                <span class="text-muted">No estimate</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.estimated_hours > 0 %}
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar 
+                                        {% if percentage > 100 %}bg-danger
+                                        {% elif percentage > 80 %}bg-warning
+                                        {% else %}bg-success{% endif %}" 
+                                        style="width: {{ [percentage, 100]|min }}%">
+                                        {{ "%.0f"|format(percentage) }}%
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.estimated_hours > 0 %}
+                                {% if percentage <= 100 %}
+                                    <span class="badge bg-success">On Track</span>
+                                {% elif percentage <= 120 %}
+                                    <span class="badge bg-warning">Slightly Over</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Over Budget</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('view_task', task_id=task.id) }}" 
+                                   class="btn btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if task.status == 'active' %}
+                                <a href="{{ url_for('timer_page') }}" 
+                                   class="btn btn-outline-success" title="Start Timer">
+                                    <i class="bi bi-play-circle"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-graph-up text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No Time Data Available</h4>
+            <p class="text-muted">Start tracking time on your tasks to see this report.</p>
+            <a href="{{ url_for('timer_page') }}" class="btn btn-primary">
+                <i class="bi bi-stopwatch"></i> Start Tracking Time
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if tasks_with_time %}
+<!-- Performance Insights -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-award"></i>
+                    Top Performers
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Most Time Spent</h6>
+                <ol class="list-unstyled">
+                    {% for item in tasks_with_time[:3] %}
+                    <li class="d-flex justify-content-between align-items-center">
+                        <span>{{ loop.index }}. {{ item.task.title }}</span>
+                        <strong>{{ "%.1f"|format(item.total_time) }}h</strong>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Needs Attention
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Over Budget Tasks</h6>
+                {% set over_budget = tasks_with_time | selectattr('percentage', '>', 100) | list %}
+                {% if over_budget %}
+                <ul class="list-unstyled">
+                    {% for item in over_budget[:3] %}
+                    <li class="d-flex justify-content-between align-items-center">
+                        <span>{{ item.task.title }}</span>
+                        <span class="badge bg-danger">{{ "%.0f"|format(item.percentage) }}%</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">All tasks are within budget! 🎉</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
