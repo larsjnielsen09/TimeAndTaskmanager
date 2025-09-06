@@ -15,6 +15,9 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body class="modern-layout">
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="sidebar">
@@ -70,7 +73,14 @@
             <!-- Top Header -->
             <div class="top-header border-bottom px-4 py-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 fw-bold text-light">Timely - {% block page_title %}Dashboard{% endblock %}</h2>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-link text-light d-md-none me-2 p-0" 
+                                id="sidebarToggle" 
+                                style="border: none; background: none; font-size: 1.25rem;">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <h2 class="mb-0 fw-bold text-light">Timely - {% block page_title %}Dashboard{% endblock %}</h2>
+                    </div>
                     <div class="d-flex align-items-center">
                         <div class="me-3">
                             <i class="bi bi-bell text-muted fs-5"></i>
